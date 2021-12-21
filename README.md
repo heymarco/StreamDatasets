@@ -7,11 +7,11 @@ Small code example:
     from changeds import SortedMNIST
     
     if __name__ == '__main__':
-        mnist = SortedMNIST()
-        while mnist.has_more_samples():
-            x, y, is_change = mnist.next_sample()
+        stream = SortedMNIST()
+        while stream.has_more_samples():
+            x, y, is_change = stream.next_sample()
             if is_change:
-                print("Change at index {}".format(mnist.sample_idx))
+                print("Change at index {}".format(stream.sample_idx))
 
 ## Installation
 
