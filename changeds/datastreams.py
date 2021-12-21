@@ -1,7 +1,7 @@
 from tensorflow import keras
 import numpy as np
 
-from abstract import ChangeStream
+from .abstract import ChangeStream
 
 
 class SortedMNIST(ChangeStream):
