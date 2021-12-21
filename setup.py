@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 
 
 CLASSIFIERS = ['Intended Audience :: Science/Research',
@@ -18,7 +18,7 @@ CLASSIFIERS = ['Intended Audience :: Science/Research',
 
 setup(name='stream-datasets',
       description='Datasets for evaluating change detection algorithms.',
-      url='https://github.com/heymarco/stream-datasets',
+      url='https://github.com/heymarco/StreamDatasets',
       version="0.0.1",
       license='MIT',
       author='Florian Kalinke, Marco Heyden',
