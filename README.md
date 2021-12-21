@@ -1,5 +1,18 @@
 # StreamDatasets
 
+## Usage
+
+Small code example:
+
+    from changeds import SortedMNIST
+    
+    if __name__ == '__main__':
+        mnist = SortedMNIST()
+        while mnist.has_more_samples():
+            x, y, is_change = mnist.next_sample()
+            if is_change:
+                print("Change at index {}".format(mnist.sample_idx))
+
 ## Installation
 
 Atm, you can add the library as a development library via pip:
