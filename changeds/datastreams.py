@@ -1,7 +1,7 @@
 from tensorflow import keras
 import numpy as np
 
-from .abstract import ChangeStream
+from changeds.abstract import ChangeStream
 
 
 class SortedMNIST(ChangeStream):
@@ -18,7 +18,7 @@ class SortedMNIST(ChangeStream):
         super(SortedMNIST, self).__init__(data=x, y=y)
 
     def _is_change(self) -> bool:
-        return self._change_points[self.sample_idx - 1]
+        return self._change_points[self.sample_idx]
 
 
 if __name__ == '__main__':
