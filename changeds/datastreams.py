@@ -1,10 +1,14 @@
+import pandas as pd
 from tensorflow import keras
 import numpy as np
+from skmultiflow.data import AGRAWALGenerator
+from sklearn.preprocessing import OneHotEncoder
 
-from changeds.abstract import ChangeStream
+from changeds.abstract import ChangeStream, RegionalChangeStream
+from changeds.helper import plot_change_region_2d
 
 
-class SortedMNIST(ChangeStream):
+class SortedMNIST(RegionalChangeStream):
     def __init__(self, preprocess=None):
         (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
         x_train = np.reshape(x_train, newshape=(len(x_train), x_train.shape[1] * x_train.shape[2]))
@@ -19,11 +23,17 @@ class SortedMNIST(ChangeStream):
         self._change_points = np.diff(y, prepend=y[0]).astype(bool)
         super(SortedMNIST, self).__init__(data=x, y=y)
 
+    def change_points(self):
+        return self._change_points
+
     def _is_change(self) -> bool:
         return self._change_points[self.sample_idx]
 
+    def plot_change_region(self, change_idx: int, binary_thresh: float, save: bool, path=None):
+        plot_change_region_2d(self, change_idx, binary_thresh, save, path)
 
-class SortedFashionMNIST(ChangeStream):
+
+class SortedFashionMNIST(RegionalChangeStream):
     def __init__(self, preprocess=None):
         (x_train, y_train), (x_test, y_test) = keras.datasets.fashion_mnist.load_data()
         x_train = np.reshape(x_train, newshape=(len(x_train), x_train.shape[1] * x_train.shape[2]))
@@ -38,15 +48,17 @@ class SortedFashionMNIST(ChangeStream):
         self._change_points = np.diff(y, prepend=y[0]).astype(bool)
         super(SortedFashionMNIST, self).__init__(data=x, y=y)
 
+    def change_points(self):
+        return self._change_points
+
     def _is_change(self) -> bool:
         return self._change_points[self.sample_idx]
 
+    def plot_change_region(self, change_idx: int, binary_thresh: float, save: bool, path=None):
+        plot_change_region_2d(self, change_idx, binary_thresh, save, path)
 
-def rgb2gray(rgb):
-    return np.dot(rgb[:, :, :3], [0.299, 0.587, 0.114])
 
-
-class SortedCIFAR10(ChangeStream):
+class SortedCIFAR10(RegionalChangeStream):
     def __init__(self, preprocess=None):
         (x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
         x_train = x_train.dot([0.299, 0.587, 0.114])
@@ -64,11 +76,17 @@ class SortedCIFAR10(ChangeStream):
         self._change_points = np.diff(y, prepend=y[0]).astype(bool)
         super(SortedCIFAR10, self).__init__(data=x, y=y)
 
+    def change_points(self):
+        return self._change_points
+
     def _is_change(self) -> bool:
         return self._change_points[self.sample_idx]
 
+    def plot_change_region(self, change_idx: int, binary_thresh: float, save: bool, path=None):
+        plot_change_region_2d(self, change_idx, binary_thresh, save, path)
 
-class SortedCIFAR100(ChangeStream):
+
+class SortedCIFAR100(RegionalChangeStream):
     def __init__(self, preprocess=None):
         (x_train, y_train), (x_test, y_test) = keras.datasets.cifar100.load_data()
         x_train = x_train.dot([0.299, 0.587, 0.114])
@@ -86,13 +104,57 @@ class SortedCIFAR100(ChangeStream):
         self._change_points = np.diff(y, prepend=y[0]).astype(bool)
         super(SortedCIFAR100, self).__init__(data=x, y=y)
 
+    def change_points(self):
+        return self._change_points
+
+    def _is_change(self) -> bool:
+        return self._change_points[self.sample_idx]
+
+    def plot_change_region(self, change_idx: int, binary_thresh: float, save: bool, path=None):
+        plot_change_region_2d(self, change_idx, binary_thresh, save, path)
+
+
+class Agrawal(ChangeStream):
+
+    def __init__(self, preprocess=None, n_drifts: int = 9, n_concept: int = 1000, one_hot_encoded: bool = True):
+        self.n_concept = n_concept
+        self.n_drifts = n_drifts
+        drift_indices = [(i + 1) * n_concept for i in range(n_drifts)]
+        self._change_points = np.zeros(shape=(n_drifts + 1) * n_concept, dtype=int)
+        self._change_points[drift_indices] = 1
+        x = []
+        y = []
+        for i in range(n_drifts + 1):
+            generator = AGRAWALGenerator(classification_function=i % 10)
+            this_concept = [generator.next_sample() for _ in range(n_concept)]
+            data = [tpl[0][0] for tpl in this_concept]
+            labels = [tpl[1][0] for tpl in this_concept]
+            x += data
+            y += labels
+        x = np.asarray(x)
+        if one_hot_encoded:
+            df = pd.DataFrame(x, columns=["{}".format(i) for i in range(x.shape[-1])])
+            columns = ["3", "4", "5"]  # education level, car manufacturer, zip code
+            x = pd.get_dummies(df, columns=columns).to_numpy()
+        if preprocess:
+            x = preprocess(x)
+        super(Agrawal, self).__init__(data=x, y=np.asarray(y))
+
+    def change_points(self):
+        return self._change_points
+
     def _is_change(self) -> bool:
         return self._change_points[self.sample_idx]
 
 
 if __name__ == '__main__':
-    stream = SortedFashionMNIST()
+    stream = Agrawal()
     while stream.has_more_samples():
         x, y, is_change = stream.next_sample()
         if is_change:
             print("Change at index {}".format(stream.sample_idx))
+
+    if isinstance(stream, RegionalChangeStream):
+        change_regions = stream.approximate_change_regions()
+        stream.plot_change_region(2, binary_thresh=0.5, save=False)
+

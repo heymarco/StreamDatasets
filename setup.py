@@ -27,6 +27,6 @@ setup(name='stream-datasets',
       packages=["changeds"],
       install_requires=["scikit-multiflow", "numpy", "pandas", "tensorflow"],
       extras_require={
-        'plots':  ["matplotlib>=2.0.0"]
+        'plots':  ["matplotlib>=2.0.0", "seaborn"]
         }
       )
