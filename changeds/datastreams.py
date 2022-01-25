@@ -112,32 +112,6 @@ class SortedCIFAR100(RegionalChangeStream):
     def plot_change_region(self, change_idx: int, binary_thresh: float, save: bool, path=None):
         plot_change_region_2d(self, change_idx, binary_thresh, save, path)
 
-
-class Hyperplane(ChangeStream):
-
-    def __init__(self, preprocess=None, n_drifts: int = 9, n_concept: int = 1000,
-                 n_features: int = 100, n_drift_features: int = 10, mag_change: float = 0.5):
-        self.n_concept = n_concept
-        self.n_drifts = n_drifts
-        drift_indices = [(i + 1) * n_concept for i in range(n_drifts)]
-        self._change_points = np.zeros(shape=(n_drifts + 1) * n_concept, dtype=int)
-        self._change_points[drift_indices] = 1
-        x = []
-        y = []
-        for i in range(n_drifts + 1):
-            generator = HyperplaneGenerator(n_features=n_features,
-                                            n_drift_features=n_drift_features,
-                                            mag_change=mag_change)
-            this_concept = [generator.next_sample() for _ in range(n_concept)]
-            data = [tpl[0][0] for tpl in this_concept]
-            labels = [tpl[1][0] for tpl in this_concept]
-            x += data
-            y += labels
-        x = np.asarray(x)
-        if preprocess:
-            x = preprocess(x)
-        super(Hyperplane, self).__init__(data=x, y=np.asarray(y))
-
     def change_points(self):
         return self._change_points
 
@@ -146,7 +120,7 @@ class Hyperplane(ChangeStream):
 
 
 if __name__ == '__main__':
-    stream = Hyperplane()
+    stream = SortedCIFAR10()
     while stream.has_more_samples():
         x, y, is_change = stream.next_sample()
         if is_change:
