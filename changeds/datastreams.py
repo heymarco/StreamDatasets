@@ -116,7 +116,7 @@ class SortedCIFAR100(RegionalChangeStream):
 class Hyperplane(ChangeStream):
 
     def __init__(self, preprocess=None, n_drifts: int = 9, n_concept: int = 1000,
-                 n_features: int = 100, n_drift_features: int = 10):
+                 n_features: int = 100, n_drift_features: int = 10, mag_change: float = 0.5):
         self.n_concept = n_concept
         self.n_drifts = n_drifts
         drift_indices = [(i + 1) * n_concept for i in range(n_drifts)]
@@ -125,7 +125,6 @@ class Hyperplane(ChangeStream):
         x = []
         y = []
         for i in range(n_drifts + 1):
-            mag_change = 0.0
             generator = HyperplaneGenerator(n_features=n_features,
                                             n_drift_features=n_drift_features,
                                             mag_change=mag_change)
