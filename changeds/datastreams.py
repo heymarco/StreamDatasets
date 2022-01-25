@@ -1,8 +1,7 @@
 import pandas as pd
 from tensorflow import keras
 import numpy as np
-from skmultiflow.data import AGRAWALGenerator
-from sklearn.preprocessing import OneHotEncoder
+from skmultiflow.data import HyperplaneGenerator
 
 from changeds.abstract import ChangeStream, RegionalChangeStream
 from changeds.helper import plot_change_region_2d
@@ -114,9 +113,10 @@ class SortedCIFAR100(RegionalChangeStream):
         plot_change_region_2d(self, change_idx, binary_thresh, save, path)
 
 
-class Agrawal(ChangeStream):
+class Hyperplane(ChangeStream):
 
-    def __init__(self, preprocess=None, n_drifts: int = 9, n_concept: int = 1000, one_hot_encoded: bool = True):
+    def __init__(self, preprocess=None, n_drifts: int = 9, n_concept: int = 1000,
+                 n_features: int = 100, n_drift_features: int = 10):
         self.n_concept = n_concept
         self.n_drifts = n_drifts
         drift_indices = [(i + 1) * n_concept for i in range(n_drifts)]
@@ -125,20 +125,19 @@ class Agrawal(ChangeStream):
         x = []
         y = []
         for i in range(n_drifts + 1):
-            generator = AGRAWALGenerator(classification_function=i % 10)
+            mag_change = 0.0
+            generator = HyperplaneGenerator(n_features=n_features,
+                                            n_drift_features=n_drift_features,
+                                            mag_change=mag_change)
             this_concept = [generator.next_sample() for _ in range(n_concept)]
             data = [tpl[0][0] for tpl in this_concept]
             labels = [tpl[1][0] for tpl in this_concept]
             x += data
             y += labels
         x = np.asarray(x)
-        if one_hot_encoded:
-            df = pd.DataFrame(x, columns=["{}".format(i) for i in range(x.shape[-1])])
-            columns = ["3", "4", "5"]  # education level, car manufacturer, zip code
-            x = pd.get_dummies(df, columns=columns).to_numpy()
         if preprocess:
             x = preprocess(x)
-        super(Agrawal, self).__init__(data=x, y=np.asarray(y))
+        super(Hyperplane, self).__init__(data=x, y=np.asarray(y))
 
     def change_points(self):
         return self._change_points
@@ -148,7 +147,7 @@ class Agrawal(ChangeStream):
 
 
 if __name__ == '__main__':
-    stream = Agrawal()
+    stream = Hyperplane()
     while stream.has_more_samples():
         x, y, is_change = stream.next_sample()
         if is_change:
