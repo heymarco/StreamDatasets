@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 from tensorflow import keras
 import numpy as np
@@ -112,15 +114,57 @@ class SortedCIFAR100(RegionalChangeStream):
     def plot_change_region(self, change_idx: int, binary_thresh: float, save: bool, path=None):
         plot_change_region_2d(self, change_idx, binary_thresh, save, path)
 
+
+class PowertoolDataset(ChangeStream):
+    def __init__(self, preprocess=None):
+        power_tool_split_ratios = [
+            5600 / 14200,
+            6800 / 10500,
+            8700 / 19000,
+            7000 / 15000,
+            6500 / 18000,
+            5500 / 11500,
+            3900 / 10500,
+            7200 / 12200,
+            4400 / 8400,
+            5050 / 11000,
+            3600 / 7800,
+            4900 / 11700,
+            2800 / 8100,
+            3500 / 7500,
+            2400 / 6000
+        ]
+        dfs = []
+        y = []
+        change_indices = []
+        path = os.path.join(os.getcwd(), "..", "data", "powertool")
+        for i, filename in enumerate(sorted(os.listdir(path))):
+            filepath = os.path.join(path, filename)
+            this_df = pd.read_csv(filepath, sep=";").dropna()
+            dfs.append(this_df)
+            change_index = int(power_tool_split_ratios[i] * len(this_df))
+            change_indices.append(change_index)
+            this_y = np.zeros(len(this_df))
+            this_y[change_index:] = 1
+            y += this_y.tolist()
+        x = pd.concat(dfs, ignore_index=True)
+        if preprocess:
+            x = preprocess(x)
+        self._change_points = np.abs(np.diff(y, prepend=y[0])).astype(bool)
+        super(PowertoolDataset, self).__init__(data=x, y=np.asarray(y))
+
     def change_points(self):
         return self._change_points
 
     def _is_change(self) -> bool:
         return self._change_points[self.sample_idx]
 
+    def plot_change_region(self, change_idx: int, binary_thresh: float, save: bool, path=None):
+        plot_change_region_2d(self, change_idx, binary_thresh, save, path)
+
 
 if __name__ == '__main__':
-    stream = SortedCIFAR10()
+    stream = PowertoolDataset()
     while stream.has_more_samples():
         x, y, is_change = stream.next_sample()
         if is_change:
