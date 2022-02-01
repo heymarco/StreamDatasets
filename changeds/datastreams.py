@@ -137,7 +137,8 @@ class PowertoolDataset(ChangeStream):
         dfs = []
         y = []
         change_indices = []
-        path = os.path.join("..", "data", "powertool")
+        path, _ = os.path.split(os.path.realpath(__file__))
+        path = os.path.join(path, "..", "data", "powertool")
         for i, filename in enumerate(sorted(os.listdir(path))):
             filepath = os.path.join(path, filename)
             this_df = pd.read_csv(filepath, sep=";").dropna()
