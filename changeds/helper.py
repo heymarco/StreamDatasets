@@ -1,4 +1,8 @@
+import os.path
+from tqdm import tqdm
+
 import numpy as np
+import pandas as pd
 from matplotlib import pyplot as plt
 import seaborn as sns
 
@@ -27,3 +31,31 @@ def plot_change_region_2d(regional_change_stream, change_idx: int, binary_thresh
 
 def rgb2gray(rgb):
     return np.dot(rgb[:, :, :3], [0.299, 0.587, 0.114])
+
+
+def preprocess_hipe() -> pd.DataFrame:
+    this_dir, _ = os.path.split(__file__)
+    folder = os.path.join(this_dir, "..", "data", "hipe")
+    cache_dir = os.path.join(folder, "cache")
+    cache_df_path = os.path.join(cache_dir, "df.csv")
+    if os.path.exists(cache_df_path):
+        data = pd.read_csv(cache_df_path)
+        data["SensorDateTime"] = pd.to_datetime(data["SensorDateTime"], utc=True)
+    else:
+        dfs = []
+        all_files = os.listdir(folder)
+        for i, file in tqdm(enumerate(all_files)):
+            if file.endswith(".csv"):
+                path = os.path.join(folder, file)
+                df = pd.read_csv(path)
+                df["SensorDateTime"] = pd.to_datetime(df["SensorDateTime"], utc=True).dt.round("s")
+                dfs.append(df)
+        data = pd.concat(dfs, join="outer", ignore_index=True)
+        data = data.sort_values("SensorDateTime").groupby("SensorDateTime").mean()
+        data.to_csv(cache_df_path)
+    data.ffill(inplace=True)  # forward fill if possible
+    data.bfill(inplace=True)  # backward fill the rest
+    return data.drop(["PhaseCount"], axis=1)
+
+
+

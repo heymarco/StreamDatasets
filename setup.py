@@ -25,7 +25,7 @@ setup(name='stream-datasets',
       classifiers=CLASSIFIERS,
       python_requires=">=3.6",
       packages=["changeds"],
-      install_requires=["scikit-multiflow", "numpy", "pandas", "tensorflow"],
+      install_requires=["scikit-multiflow", "numpy", "pandas", "tensorflow", "tqdm"],
       extras_require={
         'plots':  ["matplotlib>=2.0.0", "seaborn"]
         }
