@@ -55,7 +55,7 @@ def preprocess_hipe() -> pd.DataFrame:
         data.to_csv(cache_df_path)
     data.ffill(inplace=True)  # forward fill if possible
     data.bfill(inplace=True)  # backward fill the rest
-    return data.drop(["PhaseCount"], axis=1)
+    return data.drop(["PhaseCount"], axis=1).to_numpy()
 
 
 
