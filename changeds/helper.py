@@ -42,20 +42,31 @@ def preprocess_hipe() -> pd.DataFrame:
         data = pd.read_csv(cache_df_path)
         data["SensorDateTime"] = pd.to_datetime(data["SensorDateTime"], utc=True)
     else:
-        dfs = []
+        data = None
         all_files = os.listdir(folder)
         for i, file in tqdm(enumerate(all_files)):
             if file.endswith(".csv"):
                 path = os.path.join(folder, file)
-                df = pd.read_csv(path)
+                df = pd.read_csv(path).loc[::10]
                 df["SensorDateTime"] = pd.to_datetime(df["SensorDateTime"], utc=True).dt.round("s")
-                dfs.append(df)
-        data = pd.concat(dfs, join="outer", ignore_index=True)
+                df.drop("Machine", axis=1, inplace=True)
+                if data is None:
+                    data = df
+                else:
+                    data = pd.merge(data, df, how="outer", on="SensorDateTime")
         data = data.sort_values("SensorDateTime").groupby("SensorDateTime").mean()
         data.to_csv(cache_df_path)
     data.ffill(inplace=True)  # forward fill if possible
     data.bfill(inplace=True)  # backward fill the rest
-    return data.drop(["SensorDateTime", "PhaseCount"], axis=1).to_numpy()
+    data = data.loc[:, (data != 0).any(axis=0)]
+    phase_count_cols = [col for col in data.columns if "PhaseCount" in col]
+    return data.drop(["SensorDateTime"] + phase_count_cols, axis=1)
 
+
+def plot_hipe():
+    data = preprocess_hipe()
+    fig, axes = plt.subplots(4, 1, sharex=True)
+    axes[0].plot(x=data["SensorDateTime"], y=data["P_kW"])
+    axes[1].plot(x=data["SensorDateTime"], y=data["P_kW"])
 
 
