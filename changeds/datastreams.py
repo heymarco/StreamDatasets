@@ -7,9 +7,8 @@ import numpy as np
 from skmultiflow.data import HyperplaneGenerator
 
 from changeds.abstract import ChangeStream, RegionalChangeStream
-from changeds.helper import plot_change_region_2d
+from changeds.helper import plot_change_region_2d, preprocess_hipe
 
-from helper import preprocess_hipe
 import seaborn as sns
 
 
