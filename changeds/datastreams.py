@@ -131,7 +131,8 @@ class HIPE(ChangeStream):
         return self._change_points[self.sample_idx]
 
 
-class LED(ChangeStream):
+class LED(RegionalChangeStream):
+
     def __init__(self, n_per_concept: int = 10000, n_drifts: int = 10, has_noise=True, preprocess=None):
         """
         Creates a sudden, but
@@ -140,6 +141,7 @@ class LED(ChangeStream):
         :param has_noise:
         :param preprocess:
         """
+        self.has_noise = has_noise
         random_state = 0
         x = []
         for i in range(n_drifts):
@@ -159,11 +161,21 @@ class LED(ChangeStream):
     def _is_change(self) -> bool:
         return self.change_points()[self.sample_idx]
 
+    def approximate_change_regions(self):
+        if self.has_noise:
+            return [1 if i < 7 else 0 for i in range(len(self.y))]
+        else:
+            return [1 for _ in range(len(self.y))]
 
-class RBF(ChangeStream):
+    def plot_change_region(self, change_idx: int, binary_thresh: float, save: bool, path=None):
+        raise NotImplementedError
+
+
+class RBF(RegionalChangeStream):
     def __init__(self, n_per_concept: int = 10000,
                  n_drifts: int = 10, dims: int = 100,
                  n_centroids: int = 10, add_dims_without_drift=True, preprocess=None):
+        self.add_dims_without_drift = add_dims_without_drift
         sample_random_state = 0
         x = []
         no_drift = []
@@ -193,6 +205,15 @@ class RBF(ChangeStream):
 
     def _is_change(self) -> bool:
         return self.change_points()[self.sample_idx]
+
+    def approximate_change_regions(self):
+        if self.add_dims_without_drift:
+            return [1 if i < len(self.y) / 2 else 0 for i in range(len(self.y))]
+        else:
+            return [1 for _ in range(len(self.y))]
+
+    def plot_change_region(self, change_idx: int, binary_thresh: float, save: bool, path=None):
+        raise NotImplementedError
 
 
 class ArtificialStream(ClassificationStream):
