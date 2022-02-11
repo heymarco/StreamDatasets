@@ -1,3 +1,7 @@
+from distutils.command import build
+from os import path
+from subprocess import check_call
+
 from setuptools import setup
 
 
@@ -16,6 +20,14 @@ CLASSIFIERS = ['Intended Audience :: Science/Research',
                'Programming Language :: Python :: 3.8']
 
 
+class BuildWithSubmodules(build):
+    def run(self):
+        if path.exists('.git'):
+            check_call(['git', 'submodule', 'init'])
+            check_call(['git', 'submodule', 'update'])
+        build.run(self)
+
+
 setup(name='stream-datasets',
       description='Datasets for evaluating change detection algorithms.',
       url='https://github.com/heymarco/StreamDatasets',
@@ -28,5 +40,6 @@ setup(name='stream-datasets',
       install_requires=["scikit-multiflow", "numpy", "pandas", "tensorflow", "tqdm"],
       extras_require={
         'plots':  ["matplotlib>=2.0.0", "seaborn"]
-        }
+        },
+      cmdclass={"build": BuildWithSubmodules},
       )

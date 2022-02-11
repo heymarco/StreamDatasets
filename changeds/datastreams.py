@@ -1,15 +1,10 @@
 import os
 
-import pandas as pd
-from matplotlib import pyplot as plt
 from tensorflow import keras
 import numpy as np
-from skmultiflow.data import HyperplaneGenerator
 
-from changeds.abstract import ChangeStream, RegionalChangeStream
+from changeds.abstract import ChangeStream, RegionalChangeStream, ClassificationStream
 from changeds.helper import plot_change_region_2d, preprocess_hipe
-
-import seaborn as sns
 
 
 class SortedMNIST(RegionalChangeStream):
@@ -134,8 +129,26 @@ class HIPE(ChangeStream):
         return self._change_points[self.sample_idx]
 
 
+class ArtificialStream(ClassificationStream):
+    def __init__(self, filename: str):
+        path, _ = os.path.split(__file__)
+        path = os.path.join(path, "..", "concept-drift-datasets-scikit-multiflow", "artificial")
+        file_path = os.path.join(path, filename)
+        assert os.path.exists(file_path), "The requested file does not exist in {}".format(file_path)
+        super(ArtificialStream, self).__init__(data_path=file_path)
+
+
+class RealWorldStream(ClassificationStream):
+    def __init__(self, filename: str):
+        path, _ = os.path.split(__file__)
+        path = os.path.join(path, "..", "concept-drift-datasets-scikit-multiflow", "real-world")
+        file_path = os.path.join(path, filename)
+        assert os.path.exists(file_path), "The requested file does not exist in {}".format(file_path)
+        super(RealWorldStream, self).__init__(data_path=file_path)
+
+
 if __name__ == '__main__':
-    stream = HIPE()
+    stream = RealWorldStream("elec.csv")
     while stream.has_more_samples():
         x, y, is_change = stream.next_sample()
         if is_change:

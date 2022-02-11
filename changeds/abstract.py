@@ -1,6 +1,7 @@
 from abc import abstractmethod, ABCMeta
 
 import numpy as np
+import pandas as pd
 from skmultiflow.data import DataStream
 
 
@@ -12,11 +13,11 @@ class ChangeStream(DataStream, metaclass=ABCMeta):
 
     @abstractmethod
     def change_points(self):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def _is_change(self) -> bool:
-        pass
+        raise NotImplementedError
 
 
 class RegionalChangeStream(ChangeStream, metaclass=ABCMeta):
@@ -34,5 +35,28 @@ class RegionalChangeStream(ChangeStream, metaclass=ABCMeta):
 
     @abstractmethod
     def plot_change_region(self, change_idx: int, binary_thresh: float, save: bool, path=None):
-        pass
+        raise NotImplementedError
+
+
+class ClassificationStream(ChangeStream):
+    def __init__(self, data_path: str, preprocess = None):
+        """
+        Use this kind of stream to train a classifier with the data and the label
+        - can be useful to evaluate the performance of unsupervised change detection for changes in P(X) && P(y|X)
+        :param data_path: path to the csv to load
+        :param preprocess: preprocessing function
+        """
+        data = pd.read_csv(data_path)
+        y = data["target"].to_numpy()
+        x = data.drop("target", axis=1)
+        if preprocess:
+            x = preprocess(x)
+        super(ClassificationStream, self).__init__(data=x, y=y)
+
+    def change_points(self):
+        return np.array([np.nan for _ in range(len(self.y))])
+
+    def _is_change(self) -> bool:
+        return False
+
 
