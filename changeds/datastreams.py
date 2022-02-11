@@ -3,6 +3,8 @@ import os
 from tensorflow import keras
 import numpy as np
 
+from skmultiflow.data import led_generator
+
 from changeds.abstract import ChangeStream, RegionalChangeStream, ClassificationStream
 from changeds.helper import plot_change_region_2d, preprocess_hipe
 
@@ -129,6 +131,28 @@ class HIPE(ChangeStream):
         return self._change_points[self.sample_idx]
 
 
+class LED(ChangeStream):
+    def __init__(self, n_per_concept: int = 1000, n_drifts: int = 100, preprocess=None):
+        random_state = 0
+        x = []
+        for i in range(n_drifts):
+            x.append(led_generator.LEDGenerator(random_state=random_state, has_noise=True,
+                                                noise_percentage=(i + 1) / n_drifts).next_sample(n_per_concept)[0])
+        y = [i for i in range(n_drifts) for _ in range(n_per_concept)]
+        x = np.array(x)
+        x = np.concatenate(x, axis=0)
+        if preprocess:
+            x = preprocess(x)
+        self._change_points = np.diff(y, prepend=y[0]).astype(bool)
+        super(LED, self).__init__(data=x, y=np.array(y))
+
+    def change_points(self):
+        return self._change_points
+
+    def _is_change(self) -> bool:
+        return self.change_points()[self.sample_idx]
+
+
 class ArtificialStream(ClassificationStream):
     def __init__(self, filename: str):
         path, _ = os.path.split(__file__)
@@ -148,7 +172,7 @@ class RealWorldStream(ClassificationStream):
 
 
 if __name__ == '__main__':
-    stream = RealWorldStream("elec.csv")
+    stream = LED()
     while stream.has_more_samples():
         x, y, is_change = stream.next_sample()
         if is_change:
@@ -157,4 +181,3 @@ if __name__ == '__main__':
     if isinstance(stream, RegionalChangeStream):
         change_regions = stream.approximate_change_regions()
         stream.plot_change_region(2, binary_thresh=0.5, save=False)
-
