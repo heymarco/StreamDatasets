@@ -3,7 +3,7 @@ import os
 from tensorflow import keras
 import numpy as np
 
-from skmultiflow.data import led_generator
+from skmultiflow.data import led_generator, random_rbf_generator
 
 from changeds.abstract import ChangeStream, RegionalChangeStream, ClassificationStream
 from changeds.helper import plot_change_region_2d, preprocess_hipe
@@ -132,7 +132,14 @@ class HIPE(ChangeStream):
 
 
 class LED(ChangeStream):
-    def __init__(self, n_per_concept: int = 10000, n_drifts: int = 10, has_noise = True, preprocess=None):
+    def __init__(self, n_per_concept: int = 10000, n_drifts: int = 100, has_noise=True, preprocess=None):
+        """
+        Creates a sudden, but
+        :param n_per_concept:
+        :param n_drifts:
+        :param has_noise:
+        :param preprocess:
+        """
         random_state = 0
         x = []
         for i in range(n_drifts):
@@ -140,12 +147,34 @@ class LED(ChangeStream):
                                                 noise_percentage=(i + 1) / n_drifts if i % 2 == 1 else 0
                                                 ).next_sample(n_per_concept)[0])
         y = [i for i in range(n_drifts) for _ in range(n_per_concept)]
-        x = np.array(x)
         x = np.concatenate(x, axis=0)
         if preprocess:
             x = preprocess(x)
         self._change_points = np.diff(y, prepend=y[0]).astype(bool)
         super(LED, self).__init__(data=x, y=np.array(y))
+
+    def change_points(self):
+        return self._change_points
+
+    def _is_change(self) -> bool:
+        return self.change_points()[self.sample_idx]
+
+
+class RBF(ChangeStream):
+    def __init__(self, n_per_concept: int = 10000, n_drifts: int = 100, dims: int = 100,
+                 n_centroids: int = 10, preprocess=None):
+        random_model_seed = 0
+        x = []
+        for i in range(n_drifts):
+            x.append(random_rbf_generator.RandomRBFGenerator(model_random_state=random_model_seed,
+                                                             sample_random_state=i, n_features=dims,
+                                                             n_centroids=n_centroids).next_sample(n_per_concept)[0])
+        y = [i for i in range(n_drifts) for _ in range(n_per_concept)]
+        x = np.concatenate(x, axis=0)
+        if preprocess:
+            x = preprocess(x)
+        self._change_points = np.diff(y, prepend=y[0]).astype(bool)
+        super(RBF, self).__init__(data=x, y=np.array(y))
 
     def change_points(self):
         return self._change_points
@@ -173,7 +202,7 @@ class RealWorldStream(ClassificationStream):
 
 
 if __name__ == '__main__':
-    stream = LED()
+    stream = RBF()
     while stream.has_more_samples():
         x, y, is_change = stream.next_sample()
         if is_change:
