@@ -132,12 +132,13 @@ class HIPE(ChangeStream):
 
 
 class LED(ChangeStream):
-    def __init__(self, n_per_concept: int = 1000, n_drifts: int = 100, preprocess=None):
+    def __init__(self, n_per_concept: int = 10000, n_drifts: int = 10, preprocess=None):
         random_state = 0
         x = []
         for i in range(n_drifts):
             x.append(led_generator.LEDGenerator(random_state=random_state, has_noise=True,
-                                                noise_percentage=(i + 1) / n_drifts).next_sample(n_per_concept)[0])
+                                                noise_percentage=(i + 1) / n_drifts if i % 2 == 1 else 0
+                                                ).next_sample(n_per_concept)[0])
         y = [i for i in range(n_drifts) for _ in range(n_per_concept)]
         x = np.array(x)
         x = np.concatenate(x, axis=0)
