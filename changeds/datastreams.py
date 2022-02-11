@@ -163,11 +163,12 @@ class LED(ChangeStream):
 class RBF(ChangeStream):
     def __init__(self, n_per_concept: int = 10000, n_drifts: int = 100, dims: int = 100,
                  n_centroids: int = 10, preprocess=None):
-        random_model_seed = 0
+        sample_random_state = 0
         x = []
         for i in range(n_drifts):
-            x.append(random_rbf_generator.RandomRBFGenerator(model_random_state=random_model_seed,
-                                                             sample_random_state=i, n_features=dims,
+            model_random_state = i
+            x.append(random_rbf_generator.RandomRBFGenerator(model_random_state=model_random_state,
+                                                             sample_random_state=sample_random_state, n_features=dims,
                                                              n_centroids=n_centroids).next_sample(n_per_concept)[0])
         y = [i for i in range(n_drifts) for _ in range(n_per_concept)]
         x = np.concatenate(x, axis=0)
