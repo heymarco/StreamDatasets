@@ -1,5 +1,7 @@
 import os
 
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder
 from tensorflow import keras
 import numpy as np
 
@@ -23,6 +25,9 @@ class SortedMNIST(RegionalChangeStream):
             x = preprocess(x)
         self._change_points = np.diff(y, prepend=y[0]).astype(bool)
         super(SortedMNIST, self).__init__(data=x, y=y)
+
+    def name(self) -> str:
+        return "sMNIST"
 
     def change_points(self):
         return self._change_points
@@ -48,6 +53,9 @@ class SortedFashionMNIST(RegionalChangeStream):
             x = preprocess(x)
         self._change_points = np.diff(y, prepend=y[0]).astype(bool)
         super(SortedFashionMNIST, self).__init__(data=x, y=y)
+
+    def name(self) -> str:
+        return "sFMNIST"
 
     def change_points(self):
         return self._change_points
@@ -77,6 +85,9 @@ class SortedCIFAR10(RegionalChangeStream):
         self._change_points = np.diff(y, prepend=y[0]).astype(bool)
         super(SortedCIFAR10, self).__init__(data=x, y=y)
 
+    def name(self) -> str:
+        return "sCIFAR"
+
     def change_points(self):
         return self._change_points
 
@@ -105,6 +116,9 @@ class SortedCIFAR100(RegionalChangeStream):
         self._change_points = np.diff(y, prepend=y[0]).astype(bool)
         super(SortedCIFAR100, self).__init__(data=x, y=y)
 
+    def name(self) -> str:
+        return "sCIFAR100"
+
     def change_points(self):
         return self._change_points
 
@@ -123,6 +137,9 @@ class HIPE(ChangeStream):
             x = preprocess(x)
         self._change_points = y
         super(HIPE, self).__init__(data=x, y=y)
+
+    def name(self) -> str:
+        return "HIPE"
 
     def change_points(self):
         return self._change_points
@@ -155,6 +172,9 @@ class LED(RegionalChangeStream):
         self._change_points = np.diff(y, prepend=y[0]).astype(bool)
         super(LED, self).__init__(data=x, y=np.array(y))
 
+    def name(self) -> str:
+        return "LED"
+
     def change_points(self):
         return self._change_points
 
@@ -169,6 +189,31 @@ class LED(RegionalChangeStream):
 
     def plot_change_region(self, change_idx: int, binary_thresh: float, save: bool, path=None):
         raise NotImplementedError
+
+
+class HAR(ChangeStream):
+    def __init__(self, preprocess=None):
+        this_dir, _ = os.path.split(__file__)
+        path_to_data = os.path.join(this_dir, "..", "data", "har")
+        test = pd.read_csv(os.path.join(path_to_data, "test.csv"))
+        train = pd.read_csv(os.path.join(path_to_data, "train.csv"))
+        x = pd.concat([test, train])
+        x = x.sort_values(by="Activity")
+        y = LabelEncoder().fit_transform(x["Activity"])
+        x = x.drop(["Activity", "subject"], axis=1)
+        if preprocess:
+            x = preprocess(x)
+        self._change_points = np.diff(y, prepend=y[0]).astype(bool)
+        super(HAR, self).__init__(data=x, y=y)
+
+    def name(self) -> str:
+        return "HAR"
+
+    def change_points(self):
+        return self._change_points
+
+    def _is_change(self) -> bool:
+        return self._change_points[self.sample_idx]
 
 
 class RBF(RegionalChangeStream):
@@ -199,6 +244,9 @@ class RBF(RegionalChangeStream):
             x = preprocess(x)
         self._change_points = np.diff(y, prepend=y[0]).astype(bool)
         super(RBF, self).__init__(data=x, y=np.array(y))
+
+    def name(self) -> str:
+        return "RBF"
 
     def change_points(self):
         return self._change_points
@@ -235,7 +283,7 @@ class RealWorldStream(ClassificationStream):
 
 
 if __name__ == '__main__':
-    stream = RBF()
+    stream = HAR()
     while stream.has_more_samples():
         x, y, is_change = stream.next_sample()
         if is_change:

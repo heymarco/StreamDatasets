@@ -19,6 +19,10 @@ class ChangeStream(DataStream, metaclass=ABCMeta):
     def _is_change(self) -> bool:
         raise NotImplementedError
 
+    @abstractmethod
+    def name(self) -> str:
+        raise NotImplementedError
+
 
 class RegionalChangeStream(ChangeStream, metaclass=ABCMeta):
     def approximate_change_regions(self):
