@@ -132,7 +132,7 @@ class HIPE(ChangeStream):
 
 
 class LED(ChangeStream):
-    def __init__(self, n_per_concept: int = 10000, n_drifts: int = 100, has_noise=True, preprocess=None):
+    def __init__(self, n_per_concept: int = 10000, n_drifts: int = 10, has_noise=True, preprocess=None):
         """
         Creates a sudden, but
         :param n_per_concept:
@@ -161,17 +161,28 @@ class LED(ChangeStream):
 
 
 class RBF(ChangeStream):
-    def __init__(self, n_per_concept: int = 10000, n_drifts: int = 100, dims: int = 100,
-                 n_centroids: int = 10, preprocess=None):
+    def __init__(self, n_per_concept: int = 10000,
+                 n_drifts: int = 10, dims: int = 100,
+                 n_centroids: int = 10, add_dims_without_drift=True, preprocess=None):
         sample_random_state = 0
         x = []
+        no_drift = []
         for i in range(n_drifts):
             model_random_state = i
             x.append(random_rbf_generator.RandomRBFGenerator(model_random_state=model_random_state,
                                                              sample_random_state=sample_random_state, n_features=dims,
                                                              n_centroids=n_centroids).next_sample(n_per_concept)[0])
+            if add_dims_without_drift:
+                no_drift_model_random_state = n_drifts  # a random seed that we will not use to create drifts
+                no_drift.append(random_rbf_generator.RandomRBFGenerator(model_random_state=no_drift_model_random_state,
+                                                                        sample_random_state=sample_random_state,
+                                                                        n_features=dims, n_centroids=n_centroids
+                                                                        ).next_sample(n_per_concept)[0])
         y = [i for i in range(n_drifts) for _ in range(n_per_concept)]
         x = np.concatenate(x, axis=0)
+        if add_dims_without_drift:
+            noise = np.concatenate(no_drift, axis=0)
+            x = np.concatenate([x, noise], axis=1)
         if preprocess:
             x = preprocess(x)
         self._change_points = np.diff(y, prepend=y[0]).astype(bool)
