@@ -7,11 +7,11 @@ import numpy as np
 
 from skmultiflow.data import led_generator, random_rbf_generator
 
-from changeds.abstract import ChangeStream, RegionalChangeStream, ClassificationStream
+from changeds.abstract import ChangeStream, RegionalChangeStream, ClassificationStream, RandomOrderChangeStream
 from changeds.helper import plot_change_region_2d, preprocess_hipe
 
 
-class SortedMNIST(RegionalChangeStream):
+class SortedMNIST(ChangeStream, RegionalChangeStream):
     def __init__(self, preprocess=None):
         (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
         x_train = np.reshape(x_train, newshape=(len(x_train), x_train.shape[1] * x_train.shape[2]))
@@ -39,7 +39,30 @@ class SortedMNIST(RegionalChangeStream):
         plot_change_region_2d(self, change_idx, binary_thresh, save, path)
 
 
-class SortedFashionMNIST(RegionalChangeStream):
+class RandomOrderMNIST(RandomOrderChangeStream):
+    def __init__(self, num_changes: int = 100, preprocess=None):
+        (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
+        x_train = np.reshape(x_train, newshape=(len(x_train), x_train.shape[1] * x_train.shape[2]))
+        x_test = np.reshape(x_test, newshape=(len(x_test), x_test.shape[1] * x_test.shape[2]))
+        x = np.vstack([x_train, x_test])
+        y = np.hstack([y_train, y_test])
+        data, y, change_points = RandomOrderChangeStream.create_changes(x, y, num_changes)
+        self._change_points = change_points
+        if preprocess:
+            data = preprocess(data)
+        super(RandomOrderMNIST, self).__init__(data=data, y=y)
+
+    def name(self) -> str:
+        return "MNIST"
+
+    def change_points(self):
+        return self._change_points
+
+    def _is_change(self) -> bool:
+        return self._change_points[self.sample_idx]
+
+
+class SortedFashionMNIST(ChangeStream, RegionalChangeStream):
     def __init__(self, preprocess=None):
         (x_train, y_train), (x_test, y_test) = keras.datasets.fashion_mnist.load_data()
         x_train = np.reshape(x_train, newshape=(len(x_train), x_train.shape[1] * x_train.shape[2]))
@@ -67,7 +90,7 @@ class SortedFashionMNIST(RegionalChangeStream):
         plot_change_region_2d(self, change_idx, binary_thresh, save, path)
 
 
-class SortedCIFAR10(RegionalChangeStream):
+class SortedCIFAR10(ChangeStream, RegionalChangeStream):
     def __init__(self, preprocess=None):
         (x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
         x_train = x_train.dot([0.299, 0.587, 0.114])
@@ -98,7 +121,7 @@ class SortedCIFAR10(RegionalChangeStream):
         plot_change_region_2d(self, change_idx, binary_thresh, save, path)
 
 
-class SortedCIFAR100(RegionalChangeStream):
+class SortedCIFAR100(ChangeStream, RegionalChangeStream):
     def __init__(self, preprocess=None):
         (x_train, y_train), (x_test, y_test) = keras.datasets.cifar100.load_data()
         x_train = x_train.dot([0.299, 0.587, 0.114])
@@ -148,7 +171,7 @@ class HIPE(ChangeStream):
         return self._change_points[self.sample_idx]
 
 
-class LED(RegionalChangeStream):
+class LED(ChangeStream, RegionalChangeStream):
 
     def __init__(self, n_per_concept: int = 10000, n_drifts: int = 10, has_noise=True, preprocess=None):
         """
@@ -216,7 +239,7 @@ class HAR(ChangeStream):
         return self._change_points[self.sample_idx]
 
 
-class RBF(RegionalChangeStream):
+class RBF(ChangeStream, RegionalChangeStream):
     def __init__(self, n_per_concept: int = 10000,
                  n_drifts: int = 10, dims: int = 100,
                  n_centroids: int = 10, add_dims_without_drift=True, preprocess=None):
@@ -265,7 +288,11 @@ class RBF(RegionalChangeStream):
 
 
 class ArtificialStream(ClassificationStream):
+    def name(self) -> str:
+        return self.filename[:-4]
+
     def __init__(self, filename: str):
+        self.filename = filename
         path, _ = os.path.split(__file__)
         path = os.path.join(path, "..", "concept-drift-datasets-scikit-multiflow", "artificial")
         file_path = os.path.join(path, filename)
@@ -274,7 +301,11 @@ class ArtificialStream(ClassificationStream):
 
 
 class RealWorldStream(ClassificationStream):
+    def name(self) -> str:
+        return self.filename[:-4]
+
     def __init__(self, filename: str):
+        self.filename = filename
         path, _ = os.path.split(__file__)
         path = os.path.join(path, "..", "concept-drift-datasets-scikit-multiflow", "real-world")
         file_path = os.path.join(path, filename)
@@ -283,7 +314,7 @@ class RealWorldStream(ClassificationStream):
 
 
 if __name__ == '__main__':
-    stream = HAR()
+    stream = RandomOrderMNIST()
     while stream.has_more_samples():
         x, y, is_change = stream.next_sample()
         if is_change:
