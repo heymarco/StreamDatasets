@@ -7,7 +7,6 @@ from skmultiflow.data import DataStream
 
 
 class ChangeStream(DataStream, metaclass=ABCMeta):
-
     def next_sample(self, batch_size=1):
         change = self._is_change()
         x, y = super(ChangeStream, self).next_sample(batch_size)
@@ -22,7 +21,7 @@ class ChangeStream(DataStream, metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def name(self) -> str:
+    def id(self) -> str:
         raise NotImplementedError
 
 

@@ -26,7 +26,7 @@ class SortedMNIST(ChangeStream, RegionalChangeStream):
         self._change_points = np.diff(y, prepend=y[0]).astype(bool)
         super(SortedMNIST, self).__init__(data=x, y=y)
 
-    def name(self) -> str:
+    def id(self) -> str:
         return "sMNIST"
 
     def change_points(self):
@@ -52,7 +52,7 @@ class RandomOrderMNIST(RandomOrderChangeStream):
             data = preprocess(data)
         super(RandomOrderMNIST, self).__init__(data=data, y=y)
 
-    def name(self) -> str:
+    def id(self) -> str:
         return "MNIST"
 
     def change_points(self):
@@ -77,7 +77,7 @@ class SortedFashionMNIST(ChangeStream, RegionalChangeStream):
         self._change_points = np.diff(y, prepend=y[0]).astype(bool)
         super(SortedFashionMNIST, self).__init__(data=x, y=y)
 
-    def name(self) -> str:
+    def id(self) -> str:
         return "sFMNIST"
 
     def change_points(self):
@@ -103,7 +103,7 @@ class RandomOrderFashionMNIST(RandomOrderChangeStream):
             data = preprocess(data)
         super(RandomOrderFashionMNIST, self).__init__(data=data, y=y)
 
-    def name(self) -> str:
+    def id(self) -> str:
         return "FMNIST"
 
     def change_points(self):
@@ -131,7 +131,7 @@ class SortedCIFAR10(ChangeStream, RegionalChangeStream):
         self._change_points = np.diff(y, prepend=y[0]).astype(bool)
         super(SortedCIFAR10, self).__init__(data=x, y=y)
 
-    def name(self) -> str:
+    def id(self) -> str:
         return "sCIFAR"
 
     def change_points(self):
@@ -159,7 +159,7 @@ class RandomOrderCIFAR10(RandomOrderChangeStream):
             data = preprocess(data)
         super(RandomOrderCIFAR10, self).__init__(data=data, y=y)
 
-    def name(self) -> str:
+    def id(self) -> str:
         return "CIFAR"
 
     def change_points(self):
@@ -187,7 +187,7 @@ class SortedCIFAR100(ChangeStream, RegionalChangeStream):
         self._change_points = np.diff(y, prepend=y[0]).astype(bool)
         super(SortedCIFAR100, self).__init__(data=x, y=y)
 
-    def name(self) -> str:
+    def id(self) -> str:
         return "sCIFAR100"
 
     def change_points(self):
@@ -215,7 +215,7 @@ class RandomOrderCIFAR100(RandomOrderChangeStream):
             data = preprocess(data)
         super(RandomOrderCIFAR100, self).__init__(data=data, y=y)
 
-    def name(self) -> str:
+    def id(self) -> str:
         return "CIFAR100"
 
     def change_points(self):
@@ -234,7 +234,7 @@ class HIPE(ChangeStream):
         self._change_points = y
         super(HIPE, self).__init__(data=x, y=y)
 
-    def name(self) -> str:
+    def id(self) -> str:
         return "HIPE"
 
     def change_points(self):
@@ -268,7 +268,7 @@ class LED(ChangeStream, RegionalChangeStream):
         self._change_points = np.diff(y, prepend=y[0]).astype(bool)
         super(LED, self).__init__(data=x, y=np.array(y))
 
-    def name(self) -> str:
+    def id(self) -> str:
         return "LED"
 
     def change_points(self):
@@ -302,7 +302,7 @@ class HAR(ChangeStream):
         self._change_points = np.diff(y, prepend=y[0]).astype(bool)
         super(HAR, self).__init__(data=x, y=y)
 
-    def name(self) -> str:
+    def id(self) -> str:
         return "sHAR"
 
     def change_points(self):
@@ -328,7 +328,7 @@ class RandomOrderHAR(ChangeStream):
         self._change_points = change_points
         super(RandomOrderHAR, self).__init__(data=data, y=y)
 
-    def name(self) -> str:
+    def id(self) -> str:
         return "HAR"
 
     def change_points(self):
@@ -367,7 +367,7 @@ class RBF(ChangeStream, RegionalChangeStream):
         self._change_points = np.diff(y, prepend=y[0]).astype(bool)
         super(RBF, self).__init__(data=x, y=np.array(y))
 
-    def name(self) -> str:
+    def id(self) -> str:
         return "RBF"
 
     def change_points(self):
@@ -387,7 +387,7 @@ class RBF(ChangeStream, RegionalChangeStream):
 
 
 class ArtificialStream(ClassificationStream):
-    def name(self) -> str:
+    def id(self) -> str:
         return self.filename[:-4]
 
     def __init__(self, filename: str):
@@ -400,7 +400,7 @@ class ArtificialStream(ClassificationStream):
 
 
 class RealWorldStream(ClassificationStream):
-    def name(self) -> str:
+    def id(self) -> str:
         return self.filename[:-4]
 
     def __init__(self, filename: str):
@@ -414,6 +414,7 @@ class RealWorldStream(ClassificationStream):
 
 if __name__ == '__main__':
     stream = RandomOrderHAR()
+    print(stream.id())
     while stream.has_more_samples():
         x, y, is_change = stream.next_sample()
         if is_change:
