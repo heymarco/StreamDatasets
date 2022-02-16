@@ -1,3 +1,10 @@
+"""In all functions, we assume that `true_cps` and `reported_cps` are sorted from lowest to highest."""
+
+
+def percent_changes_detected(true_cps, reported_cps):
+    return len(reported_cps) / len(true_cps) * 100
+
+
 def mean_until_detection(true_cps, reported_cps):
     reported_cps = reported_cps.copy()
     dist = 0
@@ -9,6 +16,7 @@ def mean_until_detection(true_cps, reported_cps):
             reported_cps.remove(reported_cp)
             break
     return dist / len(true_cps)
+
 
 def true_positives(true_cps, reported_cps, T=10):
     true_cps = true_cps.copy()
