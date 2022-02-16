@@ -1,3 +1,15 @@
+def mean_until_detection(true_cps, reported_cps):
+    reported_cps = reported_cps.copy()
+    dist = 0
+    for true_cp in true_cps:
+        for reported_cp in reported_cps:
+            if reported_cp <= true_cp:
+                continue
+            dist += reported_cp - true_cp
+            reported_cps.remove(reported_cp)
+            break
+    return dist / len(true_cps)
+
 def true_positives(true_cps, reported_cps, T=10):
     true_cps = true_cps.copy()
     tps = 0
@@ -12,7 +24,7 @@ def true_positives(true_cps, reported_cps, T=10):
 
 def false_positives(true_cps, reported_cps, T=10):
     tps = true_positives(true_cps, reported_cps, T)
-    print (tps)
+    print(tps)
     return len(reported_cps) - tps
 
 
@@ -94,3 +106,21 @@ def test_fb():
     fps = false_positives(true_cps, reported_cps)
     fns = false_negatives(true_cps, reported_cps)
     assert fb_score(true_cps, reported_cps) == tps / (tps + 0.5 * (fps + fns))
+
+
+def test_mean_until_detection():
+    true_cps = [100]
+    reported_cps = [101]
+    assert mean_until_detection(true_cps, reported_cps) == 1
+
+
+def test_mean_until_detection2():
+    true_cps = [100, 200]
+    reported_cps = [101, 204]
+    assert mean_until_detection(true_cps, reported_cps) == 5 / 2
+
+
+def test_mean_until_detection3():
+    true_cps = [100, 200]
+    reported_cps = [101, 150, 160, 180, 210]
+    assert mean_until_detection(true_cps, reported_cps) == 11 / 2
