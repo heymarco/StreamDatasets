@@ -1,3 +1,5 @@
+import numpy as np
+
 """In all functions, we assume that `true_cps` and `reported_cps` are sorted from lowest to highest."""
 
 
@@ -49,10 +51,14 @@ def false_negatives(true_cps, reported_cps, T=10):
 
 
 def precision(tp, fp, fn):
+    if tp + fp == 0:
+        return np.nan
     return tp / (tp + fp)
 
 
 def recall(tp, fp, fn):
+    if tp + fn == 0:
+        return np.nan
     return tp / (tp + fn)
 
 
