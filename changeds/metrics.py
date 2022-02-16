@@ -10,14 +10,19 @@ def percent_changes_detected(true_cps, reported_cps):
 def mean_until_detection(true_cps, reported_cps):
     reported_cps = reported_cps.copy()
     dist = 0
-    for true_cp in true_cps:
+    detected_cps = 0
+    for cpi, true_cp in enumerate(true_cps):
+        next_cp = true_cps[cpi + 1] if cpi < len(true_cps) - 1 else np.infty
         for reported_cp in reported_cps:
             if reported_cp <= true_cp:
                 continue
+            if reported_cp >= next_cp:
+                continue
             dist += reported_cp - true_cp
+            detected_cps += 1
             reported_cps.remove(reported_cp)
             break
-    return dist / len(true_cps)
+    return dist / detected_cps if detected_cps > 0 else np.nan
 
 
 def true_positives(true_cps, reported_cps, T=10):
