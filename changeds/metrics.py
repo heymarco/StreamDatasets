@@ -149,3 +149,15 @@ def test_mean_until_detection3():
     true_cps = [100, 200]
     reported_cps = [101, 150, 160, 180, 210]
     assert mean_until_detection(true_cps, reported_cps) == 11 / 2
+
+
+def test_jaccard1():
+    a = [1, 2, 3]
+    b = a
+    assert jaccard(a, b) == 1
+
+
+def test_jaccard2():
+    a = np.array([1, 2, 3])
+    b = -a
+    assert jaccard(a, b) == 0

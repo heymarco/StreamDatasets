@@ -36,8 +36,12 @@ class RegionalChangeStream(Protocol):
             mean_concept_a = np.mean(concept_a, axis=0)
             mean_concept_b = np.mean(concept_b, axis=0)
             diff = np.abs(mean_concept_b - mean_concept_a)
-            change_regions.append(diff)
-        return [i for i, diff in enumerate(change_regions) if diff > 0.5]
+            thresholded = diff > 0.5
+            change_regions.append([
+                i for i, change in enumerate(thresholded) if change
+            ])
+        return change_regions
+
 
 
 class ClassificationStream(ChangeStream, ABC):

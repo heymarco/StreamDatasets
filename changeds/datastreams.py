@@ -266,7 +266,10 @@ class LED(ChangeStream, RegionalChangeStream):
         return self.change_points()[self.sample_idx]
 
     def approximate_change_regions(self):
-        return np.arange(7)
+        change_dims = np.arange(7)
+        return np.asarray([
+            change_dims for cp in self.change_points() if cp
+        ])
 
 
 class HAR(ChangeStream, RegionalChangeStream):
@@ -359,10 +362,11 @@ class RBF(ChangeStream, RegionalChangeStream):
         return self.change_points()[self.sample_idx]
 
     def approximate_change_regions(self):
-        if self.add_dims_without_drift:
-            return [1 if i < len(self.y) / 2 else 0 for i in range(len(self.y))]
-        else:
-            return [1 for _ in range(len(self.y))]
+        num_change_dims = len(self.y) / 2 if self.add_dims_without_drift else len(self.y)
+        change_dims = np.arange(num_change_dims)
+        return np.asarray([
+            change_dims for cp in self.change_points() if cp
+        ])
 
 
 class ArtificialStream(ClassificationStream):
