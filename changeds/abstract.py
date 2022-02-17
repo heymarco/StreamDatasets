@@ -37,11 +37,7 @@ class RegionalChangeStream(Protocol):
             mean_concept_b = np.mean(concept_b, axis=0)
             diff = np.abs(mean_concept_b - mean_concept_a)
             change_regions.append(diff)
-        return np.asarray(change_regions)
-
-    @abstractmethod
-    def plot_change_region(self, change_idx: int, binary_thresh: float, save: bool, path=None):
-        raise NotImplementedError
+        return [i for i, diff in enumerate(change_regions) if diff > 0.5]
 
 
 class ClassificationStream(ChangeStream, ABC):

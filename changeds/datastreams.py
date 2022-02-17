@@ -8,7 +8,7 @@ import numpy as np
 from skmultiflow.data import led_generator, random_rbf_generator
 
 from changeds.abstract import ChangeStream, RegionalChangeStream, ClassificationStream, RandomOrderChangeStream
-from changeds.helper import plot_change_region_2d, preprocess_hipe
+from changeds.helper import preprocess_hipe
 
 
 class SortedMNIST(ChangeStream, RegionalChangeStream):
@@ -34,9 +34,6 @@ class SortedMNIST(ChangeStream, RegionalChangeStream):
 
     def _is_change(self) -> bool:
         return self._change_points[self.sample_idx]
-
-    def plot_change_region(self, change_idx: int, binary_thresh: float, save: bool, path=None):
-        plot_change_region_2d(self, change_idx, binary_thresh, save, path)
 
 
 class RandomOrderMNIST(RandomOrderChangeStream):
@@ -86,11 +83,8 @@ class SortedFashionMNIST(ChangeStream, RegionalChangeStream):
     def _is_change(self) -> bool:
         return self._change_points[self.sample_idx]
 
-    def plot_change_region(self, change_idx: int, binary_thresh: float, save: bool, path=None):
-        plot_change_region_2d(self, change_idx, binary_thresh, save, path)
 
-
-class RandomOrderFashionMNIST(RandomOrderChangeStream):
+class RandomOrderFashionMNIST(RandomOrderChangeStream, RegionalChangeStream):
     def __init__(self, num_changes: int = 100, preprocess=None):
         (x_train, y_train), (x_test, y_test) = keras.datasets.fashion_mnist.load_data()
         x_train = np.reshape(x_train, newshape=(len(x_train), x_train.shape[1] * x_train.shape[2]))
@@ -140,11 +134,8 @@ class SortedCIFAR10(ChangeStream, RegionalChangeStream):
     def _is_change(self) -> bool:
         return self._change_points[self.sample_idx]
 
-    def plot_change_region(self, change_idx: int, binary_thresh: float, save: bool, path=None):
-        plot_change_region_2d(self, change_idx, binary_thresh, save, path)
 
-
-class RandomOrderCIFAR10(RandomOrderChangeStream):
+class RandomOrderCIFAR10(RandomOrderChangeStream, RegionalChangeStream):
     def __init__(self, num_changes: int = 100, preprocess=None):
         (x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
         x_train = x_train.dot([0.299, 0.587, 0.114])
@@ -196,11 +187,8 @@ class SortedCIFAR100(ChangeStream, RegionalChangeStream):
     def _is_change(self) -> bool:
         return self._change_points[self.sample_idx]
 
-    def plot_change_region(self, change_idx: int, binary_thresh: float, save: bool, path=None):
-        plot_change_region_2d(self, change_idx, binary_thresh, save, path)
 
-
-class RandomOrderCIFAR100(RandomOrderChangeStream):
+class RandomOrderCIFAR100(RandomOrderChangeStream, RegionalChangeStream):
     def __init__(self, num_changes: int = 100, preprocess=None):
         (x_train, y_train), (x_test, y_test) = keras.datasets.cifar100.load_data()
         x_train = x_train.dot([0.299, 0.587, 0.114])
@@ -278,16 +266,10 @@ class LED(ChangeStream, RegionalChangeStream):
         return self.change_points()[self.sample_idx]
 
     def approximate_change_regions(self):
-        if self.has_noise:
-            return [1 if i < 7 else 0 for i in range(len(self.y))]
-        else:
-            return [1 for _ in range(len(self.y))]
-
-    def plot_change_region(self, change_idx: int, binary_thresh: float, save: bool, path=None):
-        raise NotImplementedError
+        return np.arange(7)
 
 
-class HAR(ChangeStream):
+class HAR(ChangeStream, RegionalChangeStream):
     def __init__(self, preprocess=None):
         this_dir, _ = os.path.split(__file__)
         path_to_data = os.path.join(this_dir, "..", "data", "har")
@@ -312,7 +294,7 @@ class HAR(ChangeStream):
         return self._change_points[self.sample_idx]
 
 
-class RandomOrderHAR(ChangeStream):
+class RandomOrderHAR(ChangeStream, RegionalChangeStream):
     def __init__(self, num_changes: int = 100, preprocess=None):
         this_dir, _ = os.path.split(__file__)
         path_to_data = os.path.join(this_dir, "..", "data", "har")
@@ -382,9 +364,6 @@ class RBF(ChangeStream, RegionalChangeStream):
         else:
             return [1 for _ in range(len(self.y))]
 
-    def plot_change_region(self, change_idx: int, binary_thresh: float, save: bool, path=None):
-        raise NotImplementedError
-
 
 class ArtificialStream(ClassificationStream):
     def id(self) -> str:
@@ -422,4 +401,4 @@ if __name__ == '__main__':
 
     if isinstance(stream, RegionalChangeStream):
         change_regions = stream.approximate_change_regions()
-        stream.plot_change_region(2, binary_thresh=0.5, save=False)
+        print(change_regions)
