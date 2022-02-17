@@ -67,6 +67,12 @@ def recall(tp, fp, fn):
     return tp / (tp + fn)
 
 
+def jaccard(a, b):
+    union = np.union1d(a, b)
+    intersect = np.intersect1d(a, b)
+    return len(intersect) / len(union)
+
+
 def fb_score(true_cps, reported_cps, T=10, beta=1):
     tps = true_positives(true_cps, reported_cps, T)
     fps = false_positives(true_cps, reported_cps, T)
