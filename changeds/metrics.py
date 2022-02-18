@@ -4,7 +4,11 @@ import numpy as np
 
 
 def percent_changes_detected(true_cps, reported_cps):
-    return len(reported_cps) / len(true_cps) * 100
+    return ratio_changes_detected(true_cps, reported_cps) * 100
+
+
+def ratio_changes_detected(true_cps, reported_cps):
+    return len(reported_cps) / len(true_cps)
 
 
 def mean_until_detection(true_cps, reported_cps):
