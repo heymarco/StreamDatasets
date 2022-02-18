@@ -36,7 +36,7 @@ class SortedMNIST(ChangeStream, RegionalChangeStream):
         return self._change_points[self.sample_idx]
 
 
-class RandomOrderMNIST(RandomOrderChangeStream):
+class RandomOrderMNIST(RandomOrderChangeStream, RegionalChangeStream):
     def __init__(self, num_changes: int = 100, preprocess=None):
         (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
         x_train = np.reshape(x_train, newshape=(len(x_train), x_train.shape[1] * x_train.shape[2]))
