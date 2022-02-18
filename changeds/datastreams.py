@@ -328,6 +328,7 @@ class RBF(ChangeStream, RegionalChangeStream):
                  n_drifts: int = 10, dims: int = 100,
                  n_centroids: int = 10, add_dims_without_drift=True, preprocess=None):
         self.add_dims_without_drift = add_dims_without_drift
+        self.dims = dims
         sample_random_state = 0
         x = []
         no_drift = []
@@ -362,8 +363,7 @@ class RBF(ChangeStream, RegionalChangeStream):
         return self.change_points()[self.sample_idx]
 
     def approximate_change_regions(self):
-        num_change_dims = len(self.y) / 2 if self.add_dims_without_drift else len(self.y)
-        change_dims = np.arange(num_change_dims)
+        change_dims = np.arange(self.dims)
         return np.asarray([
             change_dims for cp in self.change_points() if cp
         ])
