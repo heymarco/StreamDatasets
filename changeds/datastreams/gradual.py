@@ -68,7 +68,7 @@ class GradualRBF(GradualChangeStream, RegionalChangeStream):
                                                                         sample_random_state=sample_random_state,
                                                                         n_features=dims, n_centroids=n_centroids
                                                                         ).next_sample(n_per_concept)[0])
-        y = [i for i in range(num_changes) for _ in range(n_per_concept)]
+        y = np.asarray([i for i in range(num_changes) for _ in range(n_per_concept)])
         x = np.concatenate(x, axis=0)
         if add_dims_without_drift:
             noise = np.concatenate(no_drift, axis=0)
@@ -92,7 +92,10 @@ class GradualLED(GradualChangeStream, RegionalChangeStream):
             x.append(led_generator.LEDGenerator(random_state=random_state, has_noise=has_noise,
                                                 noise_percentage=(i + 1) / num_changes if i % 2 == 1 else 0
                                                 ).next_sample(n_per_concept)[0])
-        y = [i for i in range(num_changes) for _ in range(n_per_concept)]
+        y = np.asarray([i for i in range(num_changes) for _ in range(n_per_concept)])
         x = np.concatenate(x, axis=0)
         super(GradualLED, self).__init__(X=x, y=y, num_changes=num_changes, drift_length=drift_length,
                                          stretch=stretch, preprocess=preprocess)
+
+    def id(self) -> str:
+        return "LED"

@@ -4,7 +4,7 @@ from changeds.datastreams.gradual import *
 
 
 if __name__ == '__main__':
-    stream = GradualMNIST()
+    stream = GradualLED()
     print(stream.id())
     print(stream.drift_lengths())
     while stream.has_more_samples():
