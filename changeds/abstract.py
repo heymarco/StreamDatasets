@@ -130,6 +130,15 @@ class GradualChangeStream(ChangeStream, ABC):
                 (i + 1) / self.num_changes * self.dl for i in range(self.num_changes)
             ], dtype=int)
 
+    def change_points(self):
+        return self._change_points
+
+    def _is_change(self) -> bool:
+        return self._change_points[self.sample_idx]
+
+    def type(self) -> str:
+        return "G"
+
     @staticmethod
     def create_changes(X, y, num_changes: int, drift_length: int, stretch: bool, shuffle_within_concept: bool = False):
         """
@@ -173,7 +182,7 @@ class GradualChangeStream(ChangeStream, ABC):
             if change == num_changes - 1:
                 break
             if len(drift_points) > 0:
-                drift_points.append(drift_points[-1] + len(random_concept) - int(this_drift_length / 2))
+                drift_points.append(drift_points[-1] + len(random_concept))
             else:
                 drift_points.append(len(random_concept))
         x_final = X[data_stream_indices]
