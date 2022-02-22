@@ -284,7 +284,7 @@ class LED(ChangeStream, RegionalChangeStream):
 class HAR(ChangeStream, RegionalChangeStream):
     def __init__(self, preprocess=None):
         this_dir, _ = os.path.split(__file__)
-        path_to_data = os.path.join(this_dir, "..", "data", "har")
+        path_to_data = os.path.join(this_dir, "..", "..", "data", "har")
         test = pd.read_csv(os.path.join(path_to_data, "test.csv"))
         train = pd.read_csv(os.path.join(path_to_data, "train.csv"))
         x = pd.concat([test, train])
