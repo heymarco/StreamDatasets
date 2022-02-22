@@ -63,5 +63,5 @@ def preprocess_hipe() -> pd.DataFrame:
     return data.drop(phase_count_cols, axis=1)
 
 
-path_to_har_data = os.path.join(os.path.split(__file__)[0], "..", "..", "data", "har")
+path_to_har_data = os.path.join(os.path.split(__file__)[0], "..", "data", "har")
 
