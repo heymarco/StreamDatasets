@@ -7,7 +7,7 @@ from skmultiflow.data import led_generator, random_rbf_generator
 from tensorflow import keras
 
 from changeds.abstract import ChangeStream, RegionalChangeStream, RandomOrderChangeStream
-
+from changeds.helper import path_to_har_data
 
 _type = "A"
 
@@ -283,10 +283,8 @@ class LED(ChangeStream, RegionalChangeStream):
 
 class HAR(ChangeStream, RegionalChangeStream):
     def __init__(self, preprocess=None):
-        this_dir, _ = os.path.split(__file__)
-        path_to_data = os.path.join(this_dir, "..", "..", "data", "har")
-        test = pd.read_csv(os.path.join(path_to_data, "test.csv"))
-        train = pd.read_csv(os.path.join(path_to_data, "train.csv"))
+        test = pd.read_csv(os.path.join(path_to_har_data, "test.csv"))
+        train = pd.read_csv(os.path.join(path_to_har_data, "train.csv"))
         x = pd.concat([test, train])
         x = x.sort_values(by="Activity")
         y = LabelEncoder().fit_transform(x["Activity"])
@@ -311,10 +309,8 @@ class HAR(ChangeStream, RegionalChangeStream):
 
 class RandomOrderHAR(ChangeStream, RegionalChangeStream):
     def __init__(self, num_changes: int = 100, preprocess=None):
-        this_dir, _ = os.path.split(__file__)
-        path_to_data = os.path.join(this_dir, "..", "data", "har")
-        test = pd.read_csv(os.path.join(path_to_data, "test.csv"))
-        train = pd.read_csv(os.path.join(path_to_data, "train.csv"))
+        test = pd.read_csv(os.path.join(path_to_har_data, "test.csv"))
+        train = pd.read_csv(os.path.join(path_to_har_data, "train.csv"))
         x = pd.concat([test, train])
         x = x.sort_values(by="Activity")
         y = LabelEncoder().fit_transform(x["Activity"])
