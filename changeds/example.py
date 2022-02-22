@@ -1,4 +1,4 @@
-from changeds.abstract import RegionalChangeStream
+from changeds.abstract import ChangeStream, RegionalChangeStream
 from changeds.datastreams.abrupt import *
 from changeds.datastreams.gradual import *
 
