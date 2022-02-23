@@ -1,7 +1,11 @@
+import os
+
 import numpy as np
+import pandas as pd
 from skmultiflow.data import random_rbf_generator, led_generator
 from tensorflow import keras
 
+from changeds.helper import gas_sensor_data_dir
 from changeds.abstract import GradualChangeStream, RegionalChangeStream
 
 
@@ -99,3 +103,15 @@ class GradualLED(GradualChangeStream, RegionalChangeStream):
 
     def id(self) -> str:
         return "LED"
+
+
+class GradualGasSensors(GradualChangeStream):
+    def __init__(self, num_changes: int = 100, drift_length: int = 100, stretch: bool = True, preprocess=None):
+        df = pd.read_csv(os.path.join(gas_sensor_data_dir, "gas-drift_csv.csv"))
+        y = df["Class"].to_numpy()
+        x = df.drop("Class", axis=1).to_numpy()
+        super(GradualGasSensors, self).__init__(X=x, y=y, num_changes=num_changes, drift_length=drift_length,
+                                                stretch=stretch, preprocess=preprocess)
+
+    def id(self) -> str:
+        return "Gas"

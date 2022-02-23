@@ -1,4 +1,5 @@
 import os
+from abc import ABC
 
 import numpy as np
 import pandas as pd
@@ -7,7 +8,7 @@ from skmultiflow.data import led_generator, random_rbf_generator
 from tensorflow import keras
 
 from changeds.abstract import ChangeStream, RegionalChangeStream, RandomOrderChangeStream
-from changeds.helper import path_to_har_data
+from changeds.helper import har_data_dir, gas_sensor_data_dir
 
 _type = "A"
 
@@ -283,8 +284,8 @@ class LED(ChangeStream, RegionalChangeStream):
 
 class HAR(ChangeStream, RegionalChangeStream):
     def __init__(self, preprocess=None):
-        test = pd.read_csv(os.path.join(path_to_har_data, "test.csv"))
-        train = pd.read_csv(os.path.join(path_to_har_data, "train.csv"))
+        test = pd.read_csv(os.path.join(har_data_dir, "test.csv"))
+        train = pd.read_csv(os.path.join(har_data_dir, "train.csv"))
         x = pd.concat([test, train])
         x = x.sort_values(by="Activity")
         y = LabelEncoder().fit_transform(x["Activity"])
@@ -309,8 +310,8 @@ class HAR(ChangeStream, RegionalChangeStream):
 
 class RandomOrderHAR(ChangeStream, RegionalChangeStream):
     def __init__(self, num_changes: int = 100, preprocess=None):
-        test = pd.read_csv(os.path.join(path_to_har_data, "test.csv"))
-        train = pd.read_csv(os.path.join(path_to_har_data, "train.csv"))
+        test = pd.read_csv(os.path.join(har_data_dir, "test.csv"))
+        train = pd.read_csv(os.path.join(har_data_dir, "train.csv"))
         x = pd.concat([test, train])
         x = x.sort_values(by="Activity")
         y = LabelEncoder().fit_transform(x["Activity"])
@@ -378,6 +379,31 @@ class RBF(ChangeStream, RegionalChangeStream):
         return np.asarray([
             change_dims for cp in self.change_points() if cp
         ])
+
+    def type(self) -> str:
+        return _type
+
+
+class GasSensors(RandomOrderChangeStream):
+    def __init__(self, num_changes: int = 100, preprocess=None):
+        df = pd.read_csv(os.path.join(gas_sensor_data_dir, "gas-drift_csv.csv"))
+        y = df["Class"].to_numpy()
+        x = df.drop("Class", axis=1).to_numpy()
+        print(df)
+        if preprocess:
+            x = preprocess(x)
+        data, y, change_points = RandomOrderChangeStream.create_changes(x, y, num_changes, shuffle_within_concept=True)
+        self._change_points = change_points
+        super(GasSensors, self).__init__(data=data, y=y)
+
+    def change_points(self):
+        return self._change_points
+
+    def _is_change(self) -> bool:
+        return self.change_points()[self.sample_idx]
+
+    def id(self) -> str:
+        return "Gas"
 
     def type(self) -> str:
         return _type

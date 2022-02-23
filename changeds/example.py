@@ -4,9 +4,8 @@ from changeds.datastreams.gradual import *
 
 
 if __name__ == '__main__':
-    stream = GradualLED()
+    stream = GradualGasSensors()
     print(stream.id())
-    print(stream.drift_lengths())
     while stream.has_more_samples():
         x, y, is_change = stream.next_sample()
         if is_change:
