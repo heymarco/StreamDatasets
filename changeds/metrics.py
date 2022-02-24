@@ -8,6 +8,8 @@ def percent_changes_detected(true_cps, reported_cps):
 
 
 def ratio_changes_detected(true_cps, reported_cps):
+    if len(true_cps) == 0:
+        return np.nan
     return len(reported_cps) / len(true_cps)
 
 
@@ -73,6 +75,8 @@ def recall(tp, fp, fn):
 def jaccard(a, b):
     union = np.union1d(a, b)
     intersect = np.intersect1d(a, b)
+    if len(union) == 0:
+        return np.nan
     return len(intersect) / len(union)
 
 
@@ -82,6 +86,8 @@ def fb_score(true_cps, reported_cps, T=10, beta=1):
     fns = false_negatives(true_cps, reported_cps, T)
     prec = precision(tps, fps, fns)
     rec = recall(tps, fps, fns)
+    if prec == 0:
+        return np.nan
     return (1 + beta ** 2) * (prec * rec) / ((beta ** 2 * prec) + rec)
 
 

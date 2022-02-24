@@ -4,7 +4,7 @@ from changeds.datastreams.gradual import *
 
 
 if __name__ == '__main__':
-    stream = GradualGasSensors()
+    stream = GasSensors()
     print(stream.id())
     while stream.has_more_samples():
         x, y, is_change = stream.next_sample()

@@ -1,6 +1,6 @@
 import os
-from abc import ABC
 
+import datapackage
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
@@ -386,10 +386,10 @@ class RBF(ChangeStream, RegionalChangeStream):
 
 class GasSensors(RandomOrderChangeStream):
     def __init__(self, num_changes: int = 100, preprocess=None):
+        package = datapackage.Package(gasse)
         df = pd.read_csv(os.path.join(gas_sensor_data_dir, "gas-drift_csv.csv"))
         y = df["Class"].to_numpy()
         x = df.drop("Class", axis=1).to_numpy()
-        print(df)
         if preprocess:
             x = preprocess(x)
         data, y, change_points = RandomOrderChangeStream.create_changes(x, y, num_changes, shuffle_within_concept=True)
