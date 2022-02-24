@@ -5,7 +5,7 @@ import pandas as pd
 from skmultiflow.data import random_rbf_generator, led_generator
 from tensorflow import keras
 
-from changeds.helper import gas_sensor_data_url
+from changeds.helper import gas_sensor_data_dir
 from changeds.abstract import GradualChangeStream, RegionalChangeStream
 
 
