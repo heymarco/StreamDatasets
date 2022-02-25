@@ -10,13 +10,15 @@ _type = "A"
 
 class Hypersphere(RandomOrderChangeStream, RegionalChangeStream):
     def __init__(self, num_concepts: int = 100, n_per_concept: int = 2000,
-                 dims_drift: int = 50, dims_no_drift: int = 50):
+                 dims_drift: int = 50, dims_no_drift: int = 50, preprocess=False):
         self.n_dims_sphere = dims_drift
         self.n_dims_normal = dims_no_drift
         self.num_concepts = num_concepts
         self.n_per_concept = n_per_concept
         data, labels = self._create_data()
         self._change_points = np.diff(labels, prepend=labels[0])
+        if preprocess:
+            data = preprocess(data)
         super(Hypersphere, self).__init__(data=data, y=labels)
 
     def type(self) -> str:
@@ -56,7 +58,7 @@ class Hypersphere(RandomOrderChangeStream, RegionalChangeStream):
 
 class Gaussian(RandomOrderChangeStream, RegionalChangeStream):
     def __init__(self, num_concepts: int = 100, n_per_concept: int = 2000,
-                 dims_drift: int = 50, dims_no_drift: int = 50, variance_drift: bool = False):
+                 dims_drift: int = 50, dims_no_drift: int = 50, variance_drift: bool = False, preprocess=False):
         self.num_concepts = num_concepts
         self.n_per_concept = n_per_concept
         self.dims_drift = dims_drift
@@ -64,6 +66,8 @@ class Gaussian(RandomOrderChangeStream, RegionalChangeStream):
         self.variance_drift = variance_drift
         data, labels = self._create_data()
         self._change_points = np.ceil(np.diff(labels, prepend=labels[0])).astype(int)
+        if preprocess:
+            data = preprocess(data)
         super(Gaussian, self).__init__(data=data, y=labels)
 
     def _is_change(self) -> bool:
