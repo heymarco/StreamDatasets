@@ -1,10 +1,10 @@
 from changeds.abstract import ChangeStream, RegionalChangeStream
 from changeds.datastreams.abrupt import *
 from changeds.datastreams.gradual import *
-
+from changeds.datastreams.synthetic import Hypersphere, Gaussian
 
 if __name__ == '__main__':
-    stream = GradualHAR()
+    stream = Gaussian(variance_drift=False)
     print(stream.id())
     current_change = 0
     while stream.has_more_samples():
