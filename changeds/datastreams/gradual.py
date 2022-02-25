@@ -2,10 +2,11 @@ import os
 
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import LabelEncoder
 from skmultiflow.data import random_rbf_generator, led_generator
 from tensorflow import keras
 
-from changeds.helper import gas_sensor_data_dir
+from changeds.helper import gas_sensor_data_dir, har_data_dir
 from changeds.abstract import GradualChangeStream, RegionalChangeStream
 
 
@@ -115,3 +116,15 @@ class GradualGasSensors(GradualChangeStream):
 
     def id(self) -> str:
         return "Gas"
+
+
+class GradualHAR(GradualChangeStream):
+    def __init__(self, num_changes: int = 100, drift_length: int = 100, stretch: bool = True, preprocess=None):
+        test = pd.read_csv(os.path.join(har_data_dir, "test.csv"))
+        train = pd.read_csv(os.path.join(har_data_dir, "train.csv"))
+        x = pd.concat([test, train])
+        x = x.sort_values(by="Activity")
+        y = LabelEncoder().fit_transform(x["Activity"])
+        x = x.drop(["Activity", "subject"], axis=1).to_numpy()
+        super(GradualHAR, self).__init__(X=x, y=y, num_changes=num_changes, drift_length=drift_length,
+                                         stretch=stretch, preprocess=preprocess)
