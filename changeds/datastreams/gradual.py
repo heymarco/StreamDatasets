@@ -128,3 +128,6 @@ class GradualHAR(GradualChangeStream):
         x = x.drop(["Activity", "subject"], axis=1).to_numpy()
         super(GradualHAR, self).__init__(X=x, y=y, num_changes=num_changes, drift_length=drift_length,
                                          stretch=stretch, preprocess=preprocess)
+
+    def id(self) -> str:
+        return "HAR"
