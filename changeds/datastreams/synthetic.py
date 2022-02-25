@@ -2,12 +2,12 @@ import numpy as np
 import pandas as pd
 
 
-from changeds.abstract import RegionalChangeStream, RandomOrderChangeStream, QuantifiedSeverity
+from changeds.abstract import RegionalChangeStream, RandomOrderChangeStream, QuantifiesSeverity
 
 _type = "A"
 
 
-class Hypersphere(RandomOrderChangeStream, RegionalChangeStream, QuantifiedSeverity):
+class Hypersphere(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSeverity):
     def __init__(self, num_concepts: int = 100, n_per_concept: int = 2000,
                  dims_drift: int = 50, dims_no_drift: int = 50, preprocess=False):
         self.n_dims_sphere = dims_drift
@@ -61,7 +61,7 @@ class Hypersphere(RandomOrderChangeStream, RegionalChangeStream, QuantifiedSever
         return severity
 
 
-class Gaussian(RandomOrderChangeStream, RegionalChangeStream, QuantifiedSeverity):
+class Gaussian(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSeverity):
     def __init__(self, num_concepts: int = 100, n_per_concept: int = 2000,
                  dims_drift: int = 50, dims_no_drift: int = 50, variance_drift: bool = False, preprocess=False):
         self.num_concepts = num_concepts

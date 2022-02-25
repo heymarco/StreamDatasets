@@ -194,6 +194,6 @@ class GradualChangeStream(ChangeStream, ABC):
 
 
 @runtime_checkable
-class QuantifiedSeverity(Protocol):
+class QuantifiesSeverity(Protocol):
     def get_severity(self):
         raise NotImplementedError

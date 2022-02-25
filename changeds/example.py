@@ -1,4 +1,4 @@
-from changeds.abstract import ChangeStream, RegionalChangeStream, QuantifiedSeverity
+from changeds.abstract import ChangeStream, RegionalChangeStream, QuantifiesSeverity
 from changeds.datastreams.abrupt import *
 from changeds.datastreams.gradual import *
 from changeds.datastreams.synthetic import Hypersphere, Gaussian
@@ -12,7 +12,7 @@ if __name__ == '__main__':
         if is_change:
             current_change += 1
             print("Change Nr. {} at index {}".format(current_change, stream.sample_idx))
-            if isinstance(stream, QuantifiedSeverity):
+            if isinstance(stream, QuantifiesSeverity):
                 print("Severity is {}".format(stream.get_severity()))
 
     if isinstance(stream, RegionalChangeStream):
