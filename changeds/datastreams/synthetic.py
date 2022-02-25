@@ -2,13 +2,12 @@ import numpy as np
 import pandas as pd
 
 
-from changeds.abstract import RegionalChangeStream, RandomOrderChangeStream
-
+from changeds.abstract import RegionalChangeStream, RandomOrderChangeStream, QuantifiedSeverity
 
 _type = "A"
 
 
-class Hypersphere(RandomOrderChangeStream, RegionalChangeStream):
+class Hypersphere(RandomOrderChangeStream, RegionalChangeStream, QuantifiedSeverity):
     def __init__(self, num_concepts: int = 100, n_per_concept: int = 2000,
                  dims_drift: int = 50, dims_no_drift: int = 50, preprocess=False):
         self.n_dims_sphere = dims_drift
@@ -55,8 +54,14 @@ class Hypersphere(RandomOrderChangeStream, RegionalChangeStream):
             change_dims for cp in self.change_points() if cp
         ])
 
+    def get_severity(self):
+        new_label = self.y[self.sample_idx]
+        old_label = self.y[self.sample_idx - 2]
+        severity = max(new_label, old_label) / min(new_label, old_label)
+        return severity
 
-class Gaussian(RandomOrderChangeStream, RegionalChangeStream):
+
+class Gaussian(RandomOrderChangeStream, RegionalChangeStream, QuantifiedSeverity):
     def __init__(self, num_concepts: int = 100, n_per_concept: int = 2000,
                  dims_drift: int = 50, dims_no_drift: int = 50, variance_drift: bool = False, preprocess=False):
         self.num_concepts = num_concepts
@@ -65,6 +70,7 @@ class Gaussian(RandomOrderChangeStream, RegionalChangeStream):
         self.dims_no_drift = dims_no_drift
         self.variance_drift = variance_drift
         data, labels = self._create_data()
+        print(labels)
         self._change_points = np.ceil(np.diff(labels, prepend=labels[0])).astype(int)
         if preprocess:
             data = preprocess(data)
@@ -112,4 +118,13 @@ class Gaussian(RandomOrderChangeStream, RegionalChangeStream):
 
     def type(self) -> str:
         return _type
+
+    def get_severity(self):
+        new_label = self.y[self.sample_idx]
+        old_label = self.y[self.sample_idx - 2]
+        if self.variance_drift:
+            severity = max(new_label, old_label) / min(new_label, old_label)
+        else:
+            severity = np.abs(new_label - old_label)
+        return severity
 

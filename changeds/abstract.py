@@ -191,3 +191,9 @@ class GradualChangeStream(ChangeStream, ABC):
         drift_points = np.asarray(drift_points).astype(int)
         change_points[drift_points] = 1
         return x_final, y_final, change_points
+
+
+@runtime_checkable
+class QuantifiedSeverity(Protocol):
+    def get_severity(self):
+        raise NotImplementedError
