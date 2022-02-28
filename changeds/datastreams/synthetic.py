@@ -10,8 +10,8 @@ _type = "A"
 class Hypersphere(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSeverity):
     def __init__(self, num_concepts: int = 100, n_per_concept: int = 2000,
                  dims_drift: int = 50, dims_no_drift: int = 50, preprocess=False):
-        self.n_dims_sphere = dims_drift
-        self.n_dims_normal = dims_no_drift
+        self.dims_drift = dims_drift
+        self.dims_no_drift = dims_no_drift
         self.num_concepts = num_concepts
         self.n_per_concept = n_per_concept
         data, labels = self._create_data()
@@ -33,7 +33,7 @@ class Hypersphere(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSever
         return self._change_points[self.sample_idx]
 
     def _create_hypersphere(self):
-        data = np.random.uniform(-1, 1, size=(self.num_concepts * self.n_per_concept, self.n_dims_sphere))
+        data = np.random.uniform(-1, 1, size=(self.num_concepts * self.n_per_concept, self.dims_drift))
         return data / np.linalg.norm(data, axis=0)
 
     def _sample_severity(self):
@@ -44,12 +44,12 @@ class Hypersphere(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSever
         data = self._create_hypersphere()
         data = data * np.expand_dims(y, -1)
         uncorrelated = np.random.normal(scale=0.5 * np.average(y),
-                                        size=(self.num_concepts * self.n_per_concept, self.n_dims_normal))
+                                        size=(self.num_concepts * self.n_per_concept, self.dims_no_drift))
         data = np.concatenate([data, uncorrelated], axis=1)
         return data, y
 
     def approximate_change_regions(self):
-        change_dims = np.arange(self.n_dims_sphere)
+        change_dims = np.arange(self.dims_drift)
         return np.asarray([
             change_dims for cp in self.change_points() if cp
         ])
