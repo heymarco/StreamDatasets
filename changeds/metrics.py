@@ -42,11 +42,13 @@ def change_point_mae(true_cps, reported_cps, reported_detection_delays):
             if reported_cp >= next_cp:
                 continue
             delay = reported_detection_delays[rcpi]
+            if np.isnan(delay):
+                delay_errors.append(np.nan)
             error = reported_cp - true_cp - delay
             delay_errors.append(abs(error))
             reported_cps.remove(reported_cp)
             break
-    return np.mean(delay_errors)
+    return np.nanmean(delay_errors)
 
 
 def true_positives(true_cps, reported_cps, T=10):
