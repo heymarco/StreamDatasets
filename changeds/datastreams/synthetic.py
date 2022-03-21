@@ -14,7 +14,8 @@ class Hypersphere(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSever
         self.num_concepts = num_concepts
         self.n_per_concept = n_per_concept
         data, labels = self._create_data()
-        self._change_points = np.diff(labels, prepend=labels[0])
+        concepts = [i for i in range(num_concepts) for _ in range(n_per_concept)]
+        self._change_points = np.diff(concepts, prepend=concepts[0])
         if preprocess:
             data = preprocess(data)
         super(Hypersphere, self).__init__(data=data, y=labels)
@@ -69,8 +70,8 @@ class Gaussian(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSeverity
         self.dims_no_drift = dims_no_drift
         self.variance_drift = variance_drift
         data, labels = self._create_data()
-        print(labels)
-        self._change_points = np.ceil(np.diff(labels, prepend=labels[0])).astype(int)
+        concepts = [i for i in range(num_concepts) for _ in range(n_per_concept)]
+        self._change_points = np.diff(concepts, prepend=concepts[0])
         if preprocess:
             data = preprocess(data)
         super(Gaussian, self).__init__(data=data, y=labels)
