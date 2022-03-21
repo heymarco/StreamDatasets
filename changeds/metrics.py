@@ -31,7 +31,7 @@ def mean_until_detection(true_cps, reported_cps):
     return dist / detected_cps if detected_cps > 0 else np.nan
 
 
-def change_point_mae(true_cps, reported_cps, reported_detection_delays):
+def mean_cp_detection_time_error(true_cps, reported_cps, reported_detection_delays):
     reported_cps = reported_cps.copy()
     delay_errors = []
     for cpi, true_cp in enumerate(true_cps):
@@ -44,9 +44,10 @@ def change_point_mae(true_cps, reported_cps, reported_detection_delays):
             delay = reported_detection_delays[rcpi]
             if np.isnan(delay):
                 delay_errors.append(np.nan)
-            error = reported_cp - true_cp - delay
-            delay_errors.append(abs(error))
-            reported_cps.remove(reported_cp)
+            else:
+                error = reported_cp - true_cp - delay
+                delay_errors.append(abs(error))
+                reported_cps.remove(reported_cp)
             break
     return np.nanmean(delay_errors)
 

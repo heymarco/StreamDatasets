@@ -6,7 +6,7 @@ from sklearn.preprocessing import LabelEncoder
 from skmultiflow.data import led_generator, random_rbf_generator
 from tensorflow import keras
 
-from changeds.abstract import ChangeStream, RegionalChangeStream, RandomOrderChangeStream
+from changeds.abstract import ChangeStream, RegionalChangeStream, RandomOrderChangeStream, QuantifiesSeverity
 from changeds.helper import har_data_dir, gas_sensor_data_dir
 
 _type = "A"
@@ -238,7 +238,7 @@ class RandomOrderCIFAR100(RandomOrderChangeStream, RegionalChangeStream):
         return _type
 
 
-class LED(ChangeStream, RegionalChangeStream):
+class LED(ChangeStream, RegionalChangeStream, QuantifiesSeverity):
 
     def __init__(self, n_per_concept: int = 10000, num_concepts: int = 10, has_noise=True, preprocess=None):
         """
@@ -251,15 +251,18 @@ class LED(ChangeStream, RegionalChangeStream):
         self.has_noise = has_noise
         random_state = 0
         x = []
-        for i in range(num_concepts):
+        self._invert_probability = [(i + 1) / num_concepts if i % 2 == 1 else 0 for i in range(num_concepts)]
+        for i, proba in enumerate(self._invert_probability):
             x.append(led_generator.LEDGenerator(random_state=random_state, has_noise=has_noise,
-                                                noise_percentage=(i + 1) / num_concepts if i % 2 == 1 else 0
-                                                ).next_sample(n_per_concept)[0])
+                                                noise_percentage=proba).next_sample(n_per_concept)[0])
         y = [i for i in range(num_concepts) for _ in range(n_per_concept)]
         x = np.concatenate(x, axis=0)
         if preprocess:
             x = preprocess(x)
         self._change_points = np.diff(y, prepend=y[0]).astype(bool)
+        self._invert_probability = [
+            prob for prob in self._invert_probability for _ in range(n_per_concept)
+        ]
         super(LED, self).__init__(data=x, y=np.array(y))
 
     def id(self) -> str:
@@ -276,6 +279,11 @@ class LED(ChangeStream, RegionalChangeStream):
         return np.asarray([
             change_dims for cp in self.change_points() if cp
         ])
+
+    def get_severity(self):
+        new_label = self._invert_probability[self.sample_idx]
+        old_label = self._invert_probability[self.sample_idx - 2]
+        return np.abs(new_label - old_label)
 
     def type(self) -> str:
         return _type
@@ -337,14 +345,16 @@ class RandomOrderHAR(ChangeStream, RegionalChangeStream):
 class RBF(ChangeStream, RegionalChangeStream):
     def __init__(self, n_per_concept: int = 10000,
                  num_concepts: int = 10, dims: int = 100,
-                 n_centroids: int = 10, add_dims_without_drift=True, preprocess=None):
+                 n_centroids: int = 10, add_dims_without_drift=True, preprocess=None, random_state = 0):
         self.add_dims_without_drift = add_dims_without_drift
         self.dims = dims
-        sample_random_state = 0
+        rng = np.random.default_rng(random_state)
+        sample_random_state = rng.integers(0, 100)
+        model_random_state = rng.integers(0, 100)
         x = []
         no_drift = []
         for i in range(num_concepts):
-            model_random_state = i
+            model_random_state += i
             x.append(random_rbf_generator.RandomRBFGenerator(model_random_state=model_random_state,
                                                              sample_random_state=sample_random_state, n_features=dims,
                                                              n_centroids=n_centroids).next_sample(n_per_concept)[0])

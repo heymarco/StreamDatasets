@@ -57,8 +57,7 @@ class Hypersphere(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSever
         new_label = self.y[self.sample_idx]
         old_label = self.y[self.sample_idx - 2]
         severity = max(new_label, old_label) - min(new_label, old_label)
-        factor = self.dims_drift / (self.dims_no_drift + self.dims_drift)
-        return severity * factor
+        return severity
 
 
 class Gaussian(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSeverity):
@@ -122,10 +121,5 @@ class Gaussian(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSeverity
     def get_severity(self):
         new_label = self.y[self.sample_idx]
         old_label = self.y[self.sample_idx - 2]
-        factor = self.dims_drift / (self.dims_no_drift + self.dims_drift)
-        if self.variance_drift:
-            severity = max(new_label, old_label) - min(new_label, old_label)
-        else:
-            severity = np.abs(new_label - old_label)
-        return severity * factor
+        return np.abs(new_label - old_label)
 
