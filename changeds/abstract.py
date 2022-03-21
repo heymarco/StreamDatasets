@@ -71,7 +71,10 @@ class ClassificationStream(ChangeStream, ABC):
 
 class RandomOrderChangeStream(ChangeStream, ABC):
     @staticmethod
-    def create_changes(X, y, num_concepts: int, shuffle_within_concept: bool = False):
+    def create_changes(X, y, num_concepts: int, n_per_concept: int, shuffle_within_concept: bool = False):
+        sampled_indices = np.random.choice(range(len(y)), size=min(n_per_concept, len(y)), replace=False)
+        X = X[sampled_indices]
+        y = y[sampled_indices]
         sorted_indices = np.argsort(y)
         diffs = np.diff(y[sorted_indices], prepend=y[sorted_indices][0]).astype(int)
         new_concept_indices = [i for i in range(len(diffs)) if diffs[i] == 1]
