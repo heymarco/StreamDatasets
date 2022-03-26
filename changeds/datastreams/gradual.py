@@ -18,7 +18,7 @@ class GradualMNIST(GradualChangeStream, RegionalChangeStream):
         x_test = np.reshape(x_test, newshape=(len(x_test), x_test.shape[1] * x_test.shape[2]))
         x = np.vstack([x_train, x_test])
         y = np.hstack([y_train, y_test])
-        sampled_indices = np.random.choice(range(len(y)), size=min(n_per_concept, len(y)), replace=False)
+        sampled_indices = np.random.choice(range(len(y)), size=min(n_per_concept * num_concepts, len(y)), replace=False)
         x = x[sampled_indices]
         y = y[sampled_indices]
         super(GradualMNIST, self).__init__(X=x, y=y, num_concepts=num_concepts, drift_length=drift_length,
@@ -36,7 +36,7 @@ class GradualFashionMNIST(GradualChangeStream, RegionalChangeStream):
         x_test = np.reshape(x_test, newshape=(len(x_test), x_test.shape[1] * x_test.shape[2]))
         x = np.vstack([x_train, x_test])
         y = np.hstack([y_train, y_test])
-        sampled_indices = np.random.choice(range(len(y)), size=min(n_per_concept, len(y)), replace=False)
+        sampled_indices = np.random.choice(range(len(y)), size=min(n_per_concept * num_concepts, len(y)), replace=False)
         x = x[sampled_indices]
         y = y[sampled_indices]
         super(GradualFashionMNIST, self).__init__(X=x, y=y, num_concepts=num_concepts, drift_length=drift_length,
@@ -56,7 +56,7 @@ class GradualCifar10(GradualChangeStream, RegionalChangeStream):
         x_test = np.reshape(x_test, newshape=(len(x_test), x_test.shape[1] * x_test.shape[2]))
         x = np.vstack([x_train, x_test])
         y = np.hstack([y_train.reshape(-1), y_test.reshape(-1)])
-        sampled_indices = np.random.choice(range(len(y)), size=min(n_per_concept, len(y)), replace=False)
+        sampled_indices = np.random.choice(range(len(y)), size=min(n_per_concept * num_concepts, len(y)), replace=False)
         x = x[sampled_indices]
         y = y[sampled_indices]
         super(GradualCifar10, self).__init__(X=x, y=y, num_concepts=num_concepts, drift_length=drift_length,
