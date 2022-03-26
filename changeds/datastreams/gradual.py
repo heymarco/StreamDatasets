@@ -103,8 +103,8 @@ class GradualRBF(GradualChangeStream, RegionalChangeStream):
 
 
 class GradualLED(GradualChangeStream, RegionalChangeStream):
-    def __init__(self, num_concepts: int = 100, n_per_concept: int = 2000, drift_length: int = 100, stretch: bool = True,
-                 has_noise=True, preprocess=None, random_state: int = 0):
+    def __init__(self, num_concepts: int = 100, n_per_concept: int = 2000, drift_length: int = 100,
+                 stretch: bool = True, has_noise=True, preprocess=None, random_state: int = 0):
         self.has_noise = has_noise
         self.random_state = random_state
         x = []
