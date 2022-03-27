@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 """In all functions, we assume that `true_cps` and `reported_cps` are sorted from lowest to highest."""
 
@@ -42,7 +43,7 @@ def mean_cp_detection_time_error(true_cps, reported_cps, reported_detection_dela
             if reported_cp >= next_cp:
                 continue
             delay = reported_detection_delays[rcpi]
-            if np.isnan(delay):
+            if pd.isna(delay):
                 delay_errors.append(np.nan)
             else:
                 error = reported_cp - true_cp - delay

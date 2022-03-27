@@ -11,14 +11,18 @@ from changeds.abstract import GradualChangeStream, RegionalChangeStream, Quantif
 
 
 class GradualMNIST(GradualChangeStream, RegionalChangeStream):
-    def __init__(self, num_concepts: int = 100, n_per_concept: int = 2000,
+    def __init__(self, num_concepts: int = 100, n_per_concept: int = False,
                  drift_length: int = 100, stretch: bool = True, preprocess=None):
         (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
         x_train = np.reshape(x_train, newshape=(len(x_train), x_train.shape[1] * x_train.shape[2]))
         x_test = np.reshape(x_test, newshape=(len(x_test), x_test.shape[1] * x_test.shape[2]))
         x = np.vstack([x_train, x_test])
         y = np.hstack([y_train, y_test])
-        sampled_indices = np.random.choice(range(len(y)), size=min(n_per_concept * num_concepts, len(y)), replace=False)
+        if n_per_concept:
+            sampled_indices = np.random.choice(range(len(y)), size=min(n_per_concept * num_concepts, len(y)), replace=False)
+        else:
+            sampled_indices = range(len(y))
+            np.random.shuffle(y)
         x = x[sampled_indices]
         y = y[sampled_indices]
         super(GradualMNIST, self).__init__(X=x, y=y, num_concepts=num_concepts, drift_length=drift_length,
@@ -29,14 +33,19 @@ class GradualMNIST(GradualChangeStream, RegionalChangeStream):
 
 
 class GradualFashionMNIST(GradualChangeStream, RegionalChangeStream):
-    def __init__(self, num_concepts: int = 100, n_per_concept: int = 2000,
+    def __init__(self, num_concepts: int = 100, n_per_concept: int = False,
                  drift_length: int = 100, stretch: bool = True, preprocess=None):
         (x_train, y_train), (x_test, y_test) = keras.datasets.fashion_mnist.load_data()
         x_train = np.reshape(x_train, newshape=(len(x_train), x_train.shape[1] * x_train.shape[2]))
         x_test = np.reshape(x_test, newshape=(len(x_test), x_test.shape[1] * x_test.shape[2]))
         x = np.vstack([x_train, x_test])
         y = np.hstack([y_train, y_test])
-        sampled_indices = np.random.choice(range(len(y)), size=min(n_per_concept * num_concepts, len(y)), replace=False)
+        if n_per_concept:
+            sampled_indices = np.random.choice(range(len(y)), size=min(n_per_concept * num_concepts, len(y)),
+                                               replace=False)
+        else:
+            sampled_indices = range(len(y))
+            np.random.shuffle(y)
         x = x[sampled_indices]
         y = y[sampled_indices]
         super(GradualFashionMNIST, self).__init__(X=x, y=y, num_concepts=num_concepts, drift_length=drift_length,
@@ -47,7 +56,7 @@ class GradualFashionMNIST(GradualChangeStream, RegionalChangeStream):
 
 
 class GradualCifar10(GradualChangeStream, RegionalChangeStream):
-    def __init__(self, num_concepts: int = 100, n_per_concept: int = 2000,
+    def __init__(self, num_concepts: int = 100, n_per_concept: int = False,
                  drift_length: int = 100, stretch: bool = True, preprocess=None):
         (x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
         x_train = x_train.dot([0.299, 0.587, 0.114])
@@ -56,7 +65,12 @@ class GradualCifar10(GradualChangeStream, RegionalChangeStream):
         x_test = np.reshape(x_test, newshape=(len(x_test), x_test.shape[1] * x_test.shape[2]))
         x = np.vstack([x_train, x_test])
         y = np.hstack([y_train.reshape(-1), y_test.reshape(-1)])
-        sampled_indices = np.random.choice(range(len(y)), size=min(n_per_concept * num_concepts, len(y)), replace=False)
+        if n_per_concept:
+            sampled_indices = np.random.choice(range(len(y)), size=min(n_per_concept * num_concepts, len(y)),
+                                               replace=False)
+        else:
+            sampled_indices = range(len(y))
+            np.random.shuffle(y)
         x = x[sampled_indices]
         y = y[sampled_indices]
         super(GradualCifar10, self).__init__(X=x, y=y, num_concepts=num_concepts, drift_length=drift_length,
