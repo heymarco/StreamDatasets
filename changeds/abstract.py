@@ -21,6 +21,7 @@ class ChangeStream(DataStream, metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
+    @staticmethod
     def id(self) -> str:
         raise NotImplementedError
 
