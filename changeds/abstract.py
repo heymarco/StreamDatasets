@@ -22,7 +22,7 @@ class ChangeStream(DataStream, metaclass=ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def id(self) -> str:
+    def id() -> str:
         raise NotImplementedError
 
     def type(self) -> str:
