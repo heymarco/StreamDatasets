@@ -20,9 +20,8 @@ class ChangeStream(DataStream, metaclass=ABCMeta):
     def _is_change(self) -> bool:
         raise NotImplementedError
 
-    @staticmethod
     @abstractmethod
-    def id() -> str:
+    def id(self) -> str:
         raise NotImplementedError
 
     def type(self) -> str:
