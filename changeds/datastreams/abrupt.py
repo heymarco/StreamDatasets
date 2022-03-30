@@ -244,7 +244,7 @@ class RandomOrderCIFAR100(RandomOrderChangeStream, RegionalChangeStream):
 
 class LED(ChangeStream, RegionalChangeStream, QuantifiesSeverity):
 
-    def __init__(self, n_per_concept: int = 10000, num_concepts: int = 10, has_noise=True, preprocess=None):
+    def __init__(self, n_per_concept: int = 10000, num_concepts: int = 10, has_noise=True, preprocess=None, seed=0):
         """
         Creates a sudden, but
         :param n_per_concept:
@@ -253,7 +253,7 @@ class LED(ChangeStream, RegionalChangeStream, QuantifiesSeverity):
         :param preprocess:
         """
         self.has_noise = has_noise
-        random_state = 0
+        random_state = seed
         x = []
         self._invert_probability = [(i + 1) / num_concepts if i % 2 == 1 else 0 for i in range(num_concepts)]
         for i, proba in enumerate(self._invert_probability):
@@ -351,10 +351,10 @@ class RandomOrderHAR(ChangeStream, RegionalChangeStream):
 class RBF(ChangeStream, RegionalChangeStream):
     def __init__(self, n_per_concept: int = 10000,
                  num_concepts: int = 10, dims: int = 100,
-                 n_centroids: int = 10, add_dims_without_drift=True, preprocess=None, random_state = 0):
+                 n_centroids: int = 10, add_dims_without_drift=True, preprocess=None, seed=0):
         self.add_dims_without_drift = add_dims_without_drift
         self.dims = dims
-        rng = np.random.default_rng(random_state)
+        rng = np.random.default_rng(seed)
         sample_random_state = rng.integers(0, 100)
         model_random_state = rng.integers(0, 100)
         x = []
