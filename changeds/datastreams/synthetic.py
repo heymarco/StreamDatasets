@@ -8,12 +8,16 @@ _type = "A"
 
 class Hypersphere(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSeverity):
     def __init__(self, num_concepts: int = 100, n_per_concept: int = 2000,
-                 dims_drift: int = 50, dims_no_drift: int = 50, preprocess=False, seed=0):
+                 dims_drift: int = 50, dims_no_drift: int = 50, preprocess=False, seed=0, random_subspace_size=True):
         self.rng = np.random.default_rng(seed)
         self.dims_drift = dims_drift
         self.dims_no_drift = dims_no_drift
         self.num_concepts = num_concepts
         self.n_per_concept = n_per_concept
+        if random_subspace_size:
+            total_dims = dims_drift + dims_no_drift
+            self.dims_drift = self.rng.integers(low=min(total_dims, 3), high=total_dims)
+            self.dims_no_drift = total_dims - self.dims_drift
         data, labels = self._create_data()
         concepts = [i for i in range(num_concepts) for _ in range(n_per_concept)]
         self._change_points = np.diff(concepts, prepend=concepts[0])
@@ -65,13 +69,19 @@ class Hypersphere(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSever
 class Gaussian(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSeverity):
     def __init__(self, num_concepts: int = 100, n_per_concept: int = 2000,
                  dims_drift: int = 50, dims_no_drift: int = 50, variance_drift: bool = False,
+                 random_subspace_size: bool = True,
                  preprocess=False, seed=0):
         self.rng = np.random.default_rng(seed)
+        self.random_subspace_size = random_subspace_size
         self.num_concepts = num_concepts
         self.n_per_concept = n_per_concept
         self.dims_drift = dims_drift
         self.dims_no_drift = dims_no_drift
         self.variance_drift = variance_drift
+        if random_subspace_size:
+            total_dims = dims_drift + dims_no_drift
+            self.dims_drift = self.rng.integers(low=min(total_dims, 3), high=total_dims)
+            self.dims_no_drift = total_dims - self.dims_drift
         data, labels = self._create_data()
         concepts = [i for i in range(num_concepts) for _ in range(n_per_concept)]
         self._change_points = np.diff(concepts, prepend=concepts[0])
