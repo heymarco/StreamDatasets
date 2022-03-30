@@ -351,10 +351,15 @@ class RandomOrderHAR(ChangeStream, RegionalChangeStream):
 class RBF(ChangeStream, RegionalChangeStream):
     def __init__(self, n_per_concept: int = 10000,
                  num_concepts: int = 10, dims: int = 100,
-                 n_centroids: int = 10, add_dims_without_drift=True, preprocess=None, seed=0):
+                 n_centroids: int = 10, add_dims_without_drift=True, preprocess=None, seed=0,
+                 random_subspace_size=True):
         self.add_dims_without_drift = add_dims_without_drift
         self.dims = dims
         rng = np.random.default_rng(seed)
+        if random_subspace_size:
+            total_dims = 2 * dims
+            self.dims_drift = rng.integers(low=min(3, total_dims), high=total_dims)
+            self.dims_no_drift = total_dims - self.dims_drift
         sample_random_state = rng.integers(0, 100)
         model_random_state = rng.integers(0, 100)
         x = []
@@ -362,13 +367,15 @@ class RBF(ChangeStream, RegionalChangeStream):
         for i in range(num_concepts):
             model_random_state += i
             x.append(random_rbf_generator.RandomRBFGenerator(model_random_state=model_random_state,
-                                                             sample_random_state=sample_random_state, n_features=dims,
+                                                             sample_random_state=sample_random_state,
+                                                             n_features=self.dims_drift,
                                                              n_centroids=n_centroids).next_sample(n_per_concept)[0])
             if add_dims_without_drift:
                 no_drift_model_random_state = num_concepts  # a random seed that we will not use to create drifts
                 no_drift.append(random_rbf_generator.RandomRBFGenerator(model_random_state=no_drift_model_random_state,
                                                                         sample_random_state=sample_random_state,
-                                                                        n_features=dims, n_centroids=n_centroids
+                                                                        n_features=self.dims_no_drift,
+                                                                        n_centroids=n_centroids
                                                                         ).next_sample(n_per_concept)[0])
         y = [i for i in range(num_concepts) for _ in range(n_per_concept)]
         x = np.concatenate(x, axis=0)
@@ -390,7 +397,7 @@ class RBF(ChangeStream, RegionalChangeStream):
         return self.change_points()[self.sample_idx]
 
     def approximate_change_regions(self):
-        change_dims = np.arange(self.dims)
+        change_dims = np.arange(self.dims_drift)
         return np.asarray([
             change_dims for cp in self.change_points() if cp
         ])
