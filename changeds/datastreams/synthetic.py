@@ -104,7 +104,7 @@ class Gaussian(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSeverity
             else:
                 shift.append(self.rng.uniform(low=-1.5, high=1.5))
         for i in range(len(data)):
-            subspace = self.rng.uniform(1, self.dims)
+            subspace = self.rng.integers(1, self.dims)
             data[i, :, :subspace] += shift[i]
             if i > 0:
                 if i % 2 == 0:
@@ -112,7 +112,7 @@ class Gaussian(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSeverity
                 else:
                     drift_subspace.append(subspace)
         labels = [s for s in shift for _ in range(self.n_per_concept)]
-        return data.reshape(shape=(self.num_concepts * self.n_per_concept,
+        return data.reshape((self.num_concepts * self.n_per_concept,
                                    self.dims)), np.asarray(labels), np.array(drift_subspace)
 
     def _create_variance_drift(self):
@@ -124,7 +124,7 @@ class Gaussian(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSeverity
             else:
                 std.append(self.rng.uniform(low=0.1, high=3))
         std = np.array(std)
-        std[std == np.nan] = np.nanmean(std)
+        std[np.isnan(std)] = np.nanmean(std)
         data = self.rng.normal(scale=np.mean(std), size=(self.num_concepts, self.n_per_concept, self.dims))
         for i in range(len(data)):
             subspace = self.rng.integers(1, self.dims)
@@ -136,7 +136,7 @@ class Gaussian(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSeverity
                 else:
                     drift_subspace.append(subspace)
         labels = [s for s in std for _ in range(self.n_per_concept)]
-        return data.reshape(shape=(self.num_concepts * self.n_per_concept,
+        return data.reshape((self.num_concepts * self.n_per_concept,
                                    self.dims)), np.asarray(labels), np.array(drift_subspace)
 
     def approximate_change_regions(self):
