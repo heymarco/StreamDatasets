@@ -75,12 +75,12 @@ class Gaussian(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSeverity
         self.n_per_concept = n_per_concept
         self.variance_drift = variance_drift
         self.dims = dims
-        data, self.drift_subspace_sizes = self._create_data()
+        data, labels, self.drift_subspace_sizes = self._create_data()
         concepts = [i for i in range(num_concepts) for _ in range(n_per_concept)]
         self._change_points = np.diff(concepts, prepend=concepts[0])
         if preprocess:
             data = preprocess(data)
-        super(Gaussian, self).__init__(data=data, y=[])
+        super(Gaussian, self).__init__(data=data, y=labels)
 
     def _is_change(self) -> bool:
         return self.change_points()[self.sample_idx]
@@ -111,7 +111,9 @@ class Gaussian(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSeverity
                     drift_subspace.append(drift_subspace[-1])
                 else:
                     drift_subspace.append(subspace)
-        return data.reshape(shape=(self.num_concepts * self.n_per_concept, self.dims)), np.array(drift_subspace)
+        labels = [s for s in shift for _ in range(self.n_per_concept)]
+        return data.reshape(shape=(self.num_concepts * self.n_per_concept,
+                                   self.dims)), np.asarray(labels), np.array(drift_subspace)
 
     def _create_variance_drift(self):
         std = []
@@ -125,15 +127,17 @@ class Gaussian(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSeverity
         std[std == np.nan] = np.nanmean(std)
         data = self.rng.normal(scale=np.mean(std), size=(self.num_concepts, self.n_per_concept, self.dims))
         for i in range(len(data)):
-            subspace = self.rng.uniform(1, self.dims)
-            data[i, :, :subspace] = data = self.rng.normal(scale=std[i],
-                                                           size=(self.num_concepts, self.n_per_concept, self.dims))
+            subspace = self.rng.integers(1, self.dims)
+            data[i, :, :subspace] = self.rng.normal(scale=std[i],
+                                                    size=(1, self.n_per_concept, subspace))
             if i > 0:
                 if i % 2 == 0:
                     drift_subspace.append(drift_subspace[-1])
                 else:
                     drift_subspace.append(subspace)
-        return data, np.array(drift_subspace)
+        labels = [s for s in std for _ in range(self.n_per_concept)]
+        return data.reshape(shape=(self.num_concepts * self.n_per_concept,
+                                   self.dims)), np.asarray(labels), np.array(drift_subspace)
 
     def approximate_change_regions(self):
         return np.asarray([
