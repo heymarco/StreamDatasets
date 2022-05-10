@@ -68,26 +68,19 @@ class Hypersphere(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSever
 
 class Gaussian(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSeverity):
     def __init__(self, num_concepts: int = 100, n_per_concept: int = 2000,
-                 dims_drift: int = 50, dims_no_drift: int = 50, variance_drift: bool = False,
-                 random_subspace_size: bool = True,
+                 dims: int = 20, variance_drift: bool = False,
                  preprocess=False, seed=0):
         self.rng = np.random.default_rng(seed)
-        self.random_subspace_size = random_subspace_size
         self.num_concepts = num_concepts
         self.n_per_concept = n_per_concept
-        self.dims_drift = dims_drift
-        self.dims_no_drift = dims_no_drift
         self.variance_drift = variance_drift
-        if random_subspace_size:
-            total_dims = dims_drift + dims_no_drift
-            self.dims_drift = self.rng.integers(low=min(total_dims, 3), high=total_dims)
-            self.dims_no_drift = total_dims - self.dims_drift
-        data, labels = self._create_data()
+        self.dims = dims
+        data, self.drift_subspace_sizes = self._create_data()
         concepts = [i for i in range(num_concepts) for _ in range(n_per_concept)]
         self._change_points = np.diff(concepts, prepend=concepts[0])
         if preprocess:
             data = preprocess(data)
-        super(Gaussian, self).__init__(data=data, y=labels)
+        super(Gaussian, self).__init__(data=data, y=[])
 
     def _is_change(self) -> bool:
         return self.change_points()[self.sample_idx]
@@ -102,28 +95,49 @@ class Gaussian(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSeverity
             return self._create_mean_drift()
 
     def _create_mean_drift(self):
-        mean = self.rng.uniform(-1.5, 1.5, size=self.num_concepts)
-        mean = np.array([m for m in mean for _ in range(self.n_per_concept)])
-        mean = np.expand_dims(mean, -1)
-        gaussian_data = self.rng.normal(loc=mean, size=(self.num_concepts * self.n_per_concept, self.dims_drift))
-        standard_normal_data = self.rng.normal(size=(self.num_concepts * self.n_per_concept, self.dims_no_drift))
-        data = np.concatenate([gaussian_data, standard_normal_data], axis=1)
-        return data, mean.flatten()
+        data = self.rng.normal(size=(self.num_concepts, self.n_per_concept, self.dims))
+        shift = []
+        drift_subspace = []
+        for i in range(self.num_concepts):
+            if i % 2 == 0:
+                shift.append(0)
+            else:
+                shift.append(self.rng.uniform(low=-1.5, high=1.5))
+        for i in range(len(data)):
+            subspace = self.rng.uniform(1, self.dims)
+            data[i, :, :subspace] += shift[i]
+            if i > 0:
+                if i % 2 == 0:
+                    drift_subspace.append(drift_subspace[-1])
+                else:
+                    drift_subspace.append(subspace)
+        return data.reshape(shape=(self.num_concepts * self.n_per_concept, self.dims)), np.array(drift_subspace)
 
     def _create_variance_drift(self):
-        std = self.rng.uniform(low=0, high=2, size=self.num_concepts)
-        std = np.array([s for s in std for _ in range(self.n_per_concept)])
-        std = np.expand_dims(std, -1)
-        drift_data = self.rng.normal(scale=std, size=(self.num_concepts * self.n_per_concept, self.dims_drift))
-        no_drift_data = self.rng.normal(scale=np.mean(std),
-                                        size=(self.num_concepts * self.n_per_concept, self.dims_no_drift))
-        data = np.concatenate([drift_data, no_drift_data], axis=1)
-        return data, std.flatten()
+        std = []
+        drift_subspace = []
+        for i in range(self.num_concepts):
+            if i % 2 == 0:
+                std.append(np.nan)
+            else:
+                std.append(self.rng.uniform(low=0.1, high=3))
+        std = np.array(std)
+        std[std == np.nan] = np.nanmean(std)
+        data = self.rng.normal(scale=np.mean(std), size=(self.num_concepts, self.n_per_concept, self.dims))
+        for i in range(len(data)):
+            subspace = self.rng.uniform(1, self.dims)
+            data[i, :, :subspace] = data = self.rng.normal(scale=std[i],
+                                                           size=(self.num_concepts, self.n_per_concept, self.dims))
+            if i > 0:
+                if i % 2 == 0:
+                    drift_subspace.append(drift_subspace[-1])
+                else:
+                    drift_subspace.append(subspace)
+        return data, np.array(drift_subspace)
 
     def approximate_change_regions(self):
-        change_dims = np.arange(self.dims_drift)
         return np.asarray([
-            change_dims for cp in self.change_points() if cp
+            np.arange(subspace) for subspace in self.drift_subspace_sizes
         ])
 
     def id(self) -> str:
