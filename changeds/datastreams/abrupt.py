@@ -359,14 +359,12 @@ class RBF(ChangeStream, RegionalChangeStream):
         self.dims_drift = dims_drift
         self.random_subspace_size = random_subspace_size
         rng = np.random.default_rng(seed)
-        self.dims_drift = int(self.dims / 2)
-        self.dims_no_drift = dims - self.dims_drift
         sample_random_state = rng.integers(0, 100)
         model_random_state = rng.integers(0, 100)
         data = random_rbf_generator.RandomRBFGenerator(
                         model_random_state=num_concepts, # a random seed that we will not use to create drifts
                         sample_random_state=sample_random_state,
-                        n_features=self.dims_no_drift,
+                        n_features=self.dims,
                         n_centroids=n_centroids
                     ).next_sample(n_per_concept * num_concepts)[0]
         for i in range(1, num_concepts):
