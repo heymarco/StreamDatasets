@@ -350,42 +350,39 @@ class RandomOrderHAR(ChangeStream, RegionalChangeStream):
 
 class RBF(ChangeStream, RegionalChangeStream):
     def __init__(self, n_per_concept: int = 10000,
-                 num_concepts: int = 10, dims: int = 100,
-                 n_centroids: int = 10, add_dims_without_drift=True, preprocess=None, seed=0,
+                 num_concepts: int = 10, dims: int = 100, dims_drift: int = 50,
+                 n_centroids: int = 10, preprocess=None, seed=0,
                  random_subspace_size=True):
-        self.add_dims_without_drift = add_dims_without_drift
+        if not random_subspace_size:
+            assert dims_drift <= dims
         self.dims = dims
+        self.dims_drift = dims_drift
+        self.random_subspace_size = random_subspace_size
         rng = np.random.default_rng(seed)
-        if random_subspace_size:
-            total_dims = 2 * dims
-            self.dims_drift = rng.integers(low=min(3, total_dims), high=total_dims)
-            self.dims_no_drift = total_dims - self.dims_drift
+        self.dims_drift = int(self.dims / 2)
+        self.dims_no_drift = dims - self.dims_drift
         sample_random_state = rng.integers(0, 100)
         model_random_state = rng.integers(0, 100)
-        x = []
-        no_drift = []
-        for i in range(num_concepts):
+        data = random_rbf_generator.RandomRBFGenerator(
+                        model_random_state=num_concepts, # a random seed that we will not use to create drifts
+                        sample_random_state=sample_random_state,
+                        n_features=self.dims_no_drift,
+                        n_centroids=n_centroids
+                    ).next_sample(n_per_concept * num_concepts)[0]
+        for i in range(1, num_concepts):
             model_random_state += i
-            x.append(random_rbf_generator.RandomRBFGenerator(model_random_state=model_random_state,
-                                                             sample_random_state=sample_random_state,
-                                                             n_features=self.dims_drift,
-                                                             n_centroids=n_centroids).next_sample(n_per_concept)[0])
-            if add_dims_without_drift:
-                no_drift_model_random_state = num_concepts  # a random seed that we will not use to create drifts
-                no_drift.append(random_rbf_generator.RandomRBFGenerator(model_random_state=no_drift_model_random_state,
-                                                                        sample_random_state=sample_random_state,
-                                                                        n_features=self.dims_no_drift,
-                                                                        n_centroids=n_centroids
-                                                                        ).next_sample(n_per_concept)[0])
+            random_number_drift_dims = rng.integers(1, self.dims) if random_subspace_size else self.dims_drift
+            remaining_samples = num_concepts * n_per_concept - (num_concepts - i) * n_per_concept
+            new_data = random_rbf_generator.RandomRBFGenerator(model_random_state=model_random_state,
+                                                               sample_random_state=sample_random_state,
+                                                               n_features=random_number_drift_dims,
+                                                               n_centroids=n_centroids).next_sample(remaining_samples)[0]
+            data[-remaining_samples:, :random_number_drift_dims] = new_data
         y = [i for i in range(num_concepts) for _ in range(n_per_concept)]
-        x = np.concatenate(x, axis=0)
-        if add_dims_without_drift:
-            noise = np.concatenate(no_drift, axis=0)
-            x = np.concatenate([x, noise], axis=1)
         if preprocess:
-            x = preprocess(x)
+            data = preprocess(data)
         self._change_points = np.diff(y, prepend=y[0]).astype(bool)
-        super(RBF, self).__init__(data=x, y=np.array(y))
+        super(RBF, self).__init__(data=data, y=np.array(data))
 
     def id(self) -> str:
         return "RBF"
