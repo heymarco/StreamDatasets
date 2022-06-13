@@ -348,7 +348,7 @@ class RandomOrderHAR(ChangeStream, RegionalChangeStream):
         return _type
 
 
-class RBF(ChangeStream, RegionalChangeStream):
+class RBF(ChangeStream):
     def __init__(self, n_per_concept: int = 10000,
                  num_concepts: int = 10, dims: int = 100, dims_drift: int = 50,
                  n_centroids: int = 10, preprocess=None, seed=0,

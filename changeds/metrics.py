@@ -58,6 +58,9 @@ def true_positives(true_cps, reported_cps, T=10):
     tps = 0
     for reported_cp in reported_cps:
         for true_cp in true_cps:
+            if reported_cp < true_cp:
+                reported_cps.remove(reported_cp)
+                break
             if abs(true_cp - reported_cp) < T:
                 tps += 1
                 true_cps.remove(true_cp)

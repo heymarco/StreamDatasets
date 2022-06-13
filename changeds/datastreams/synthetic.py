@@ -1,6 +1,5 @@
 import numpy as np
 
-
 from changeds.abstract import RegionalChangeStream, RandomOrderChangeStream, QuantifiesSeverity
 
 _type = "A"
@@ -8,16 +7,17 @@ _type = "A"
 
 class Hypersphere(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSeverity):
     def __init__(self, num_concepts: int = 100, n_per_concept: int = 2000,
-                 dims_drift: int = 50, dims_no_drift: int = 50, preprocess=False, seed=0, random_subspace_size=True):
+                 dims: int = 20, random_subspace_size=True,
+                 preprocess=False, seed=0):
         self.rng = np.random.default_rng(seed)
-        self.dims_drift = dims_drift
-        self.dims_no_drift = dims_no_drift
+        if random_subspace_size:
+            self.dims_drift = self.rng.integers(low=1, high=dims)
+            self.dims_no_drift = dims - self.dims_drift
+        else:
+            self.dims_drift = dims
+            self.dims_no_drift = 0
         self.num_concepts = num_concepts
         self.n_per_concept = n_per_concept
-        if random_subspace_size:
-            total_dims = dims_drift + dims_no_drift
-            self.dims_drift = self.rng.integers(low=min(total_dims, 3), high=total_dims)
-            self.dims_no_drift = total_dims - self.dims_drift
         data, labels = self._create_data()
         concepts = [i for i in range(num_concepts) for _ in range(n_per_concept)]
         self._change_points = np.diff(concepts, prepend=concepts[0])
@@ -49,7 +49,7 @@ class Hypersphere(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSever
         data = self._create_hypersphere()
         data = data * np.expand_dims(y, -1)
         uncorrelated = self.rng.normal(scale=0.5 * np.average(y),
-                                        size=(self.num_concepts * self.n_per_concept, self.dims_no_drift))
+                                       size=(self.num_concepts * self.n_per_concept, self.dims_no_drift))
         data = np.concatenate([data, uncorrelated], axis=1)
         return data, y
 
@@ -113,7 +113,7 @@ class Gaussian(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSeverity
                     drift_subspace.append(subspace)
         labels = [s for s in shift for _ in range(self.n_per_concept)]
         return data.reshape((self.num_concepts * self.n_per_concept,
-                                   self.dims)), np.asarray(labels), np.array(drift_subspace)
+                             self.dims)), np.asarray(labels), np.array(drift_subspace)
 
     def _create_variance_drift(self):
         std = []
@@ -137,7 +137,7 @@ class Gaussian(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSeverity
                     drift_subspace.append(subspace)
         labels = [s for s in std for _ in range(self.n_per_concept)]
         return data.reshape((self.num_concepts * self.n_per_concept,
-                                   self.dims)), np.asarray(labels), np.array(drift_subspace)
+                             self.dims)), np.asarray(labels), np.array(drift_subspace)
 
     def approximate_change_regions(self):
         return np.asarray([
@@ -154,4 +154,3 @@ class Gaussian(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSeverity
         new_label = self.y[self.sample_idx]
         old_label = self.y[self.sample_idx - 2]
         return np.abs(new_label - old_label)
-
