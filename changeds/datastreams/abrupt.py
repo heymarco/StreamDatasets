@@ -350,13 +350,10 @@ class RandomOrderHAR(ChangeStream, RegionalChangeStream):
 
 class RBF(ChangeStream):
     def __init__(self, n_per_concept: int = 10000,
-                 num_concepts: int = 10, dims: int = 100, dims_drift: int = 50,
+                 num_concepts: int = 10, dims: int = 100,
                  n_centroids: int = 10, preprocess=None, seed=0,
                  random_subspace_size=True):
-        if not random_subspace_size:
-            assert dims_drift <= dims
         self.dims = dims
-        self.dims_drift = dims_drift
         self.random_subspace_size = random_subspace_size
         rng = np.random.default_rng(seed)
         sample_random_state = rng.integers(0, 100)
@@ -367,9 +364,9 @@ class RBF(ChangeStream):
                         n_features=self.dims,
                         n_centroids=n_centroids
                     ).next_sample(n_per_concept * num_concepts)[0]
+        random_number_drift_dims = rng.integers(1, self.dims) if random_subspace_size else self.dims
         for i in range(1, num_concepts):
             model_random_state += i
-            random_number_drift_dims = rng.integers(1, self.dims) if random_subspace_size else self.dims_drift
             remaining_samples = num_concepts * n_per_concept - (num_concepts - i) * n_per_concept
             new_data = random_rbf_generator.RandomRBFGenerator(model_random_state=model_random_state,
                                                                sample_random_state=sample_random_state,
