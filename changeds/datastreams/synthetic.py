@@ -39,19 +39,23 @@ class Hypersphere(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSever
 
     def _create_hypersphere(self):
         data = self.rng.uniform(-1, 1, size=(self.num_concepts * self.n_per_concept, self.dims_drift))
-        return data / np.linalg.norm(data, axis=0)
+        hypersphere = data / np.linalg.norm(data, axis=0)
+        hypersphere = (hypersphere - np.min(hypersphere)) / np.max(hypersphere)  # HS is in range 0,1
+        return hypersphere
 
     def _sample_severity(self):
-        return self.rng.integers(low=0, high=100, size=self.num_concepts)
+        return self.rng.uniform(0, 1, size=self.num_concepts)
 
     def _create_data(self):
-        y = np.array([i for i in self._sample_severity() for _ in range(self.n_per_concept)])
+        radii = np.array([i for i in self._sample_severity() for _ in range(self.n_per_concept)])
         data = self._create_hypersphere()
-        data = data * np.expand_dims(y, -1)
-        uncorrelated = self.rng.normal(scale=0.5 * np.average(y),
+        data = data * np.expand_dims(radii, -1)
+        uncorrelated = self.rng.normal(scale=0.25,
                                        size=(self.num_concepts * self.n_per_concept, self.dims_no_drift))
         data = np.concatenate([data, uncorrelated], axis=1)
-        return data, y
+        assert np.max(data) <= 1
+        assert np.min(data) >= 0
+        return data, radii
 
     def approximate_change_regions(self):
         change_dims = np.arange(self.dims_drift)

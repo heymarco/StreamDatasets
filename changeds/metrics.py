@@ -58,10 +58,7 @@ def true_positives(true_cps, reported_cps, T=10):
     tps = 0
     for reported_cp in reported_cps:
         for true_cp in true_cps:
-            if reported_cp < true_cp:
-                reported_cps.remove(reported_cp)
-                break
-            if abs(true_cp - reported_cp) < T:
+            if true_cp < reported_cp < true_cp + T:
                 tps += 1
                 true_cps.remove(true_cp)
                 break
@@ -78,7 +75,7 @@ def false_negatives(true_cps, reported_cps, T=10):
     fns = len(true_cps)
     for true_cp in true_cps:
         for reported_cp in reported_cps:
-            if abs(true_cp - reported_cp) < T:
+            if true_cp < reported_cp < true_cp + T:
                 fns -= 1
                 reported_cps.remove(reported_cp)
                 break
