@@ -20,7 +20,12 @@ class GradualMNIST(GradualChangeStream, RegionalChangeStream):
         x = np.vstack([x_train, x_test])
         y = np.hstack([y_train, y_test])
         if n_per_concept:
-            sampled_indices = rng.choice(range(len(y)), size=min(n_per_concept * num_concepts, len(y)), replace=False)
+            # We have to sample at least n_per_concept * len(np.unique(y)
+            # to ensure that in the end we have n_per_concept data points in each concept.
+            # Otherwise, we only have num_concepts / len(np.unique(y) in each concept due to ordering by label
+            # in create_changes of the super class.
+            num_sampled_concepts = max(num_concepts, len(np.unique(y)))
+            sampled_indices = rng.choice(range(len(y)), size=min(n_per_concept * num_sampled_concepts, len(y)), replace=False)
         else:
             sampled_indices = range(len(y))
             rng.shuffle(y)
@@ -43,8 +48,13 @@ class GradualFashionMNIST(GradualChangeStream, RegionalChangeStream):
         x = np.vstack([x_train, x_test])
         y = np.hstack([y_train, y_test])
         if n_per_concept:
-            sampled_indices = rng.choice(range(len(y)), size=min(n_per_concept * num_concepts, len(y)),
-                                               replace=False)
+            # We have to sample at least n_per_concept * len(np.unique(y)
+            # to ensure that in the end we have n_per_concept data points in each concept.
+            # Otherwise, we only have num_concepts / len(np.unique(y) in each concept due to ordering by label
+            # in create_changes of the super class.
+            num_sampled_concepts = max(num_concepts, len(np.unique(y)))
+            sampled_indices = rng.choice(range(len(y)), size=min(n_per_concept * num_sampled_concepts, len(y)),
+                                         replace=False)
         else:
             sampled_indices = range(len(y))
             rng.shuffle(y)
@@ -69,8 +79,13 @@ class GradualCifar10(GradualChangeStream, RegionalChangeStream):
         x = np.vstack([x_train, x_test])
         y = np.hstack([y_train.reshape(-1), y_test.reshape(-1)])
         if n_per_concept:
-            sampled_indices = rng.choice(range(len(y)), size=min(n_per_concept * num_concepts, len(y)),
-                                               replace=False)
+            # We have to sample at least n_per_concept * len(np.unique(y)
+            # to ensure that in the end we have n_per_concept data points in each concept.
+            # Otherwise, we only have num_concepts / len(np.unique(y) in each concept due to ordering by label
+            # in create_changes of the super class.
+            num_sampled_concepts = max(num_concepts, len(np.unique(y)))
+            sampled_indices = rng.choice(range(len(y)), size=min(n_per_concept * num_sampled_concepts, len(y)),
+                                         replace=False)
         else:
             sampled_indices = range(len(y))
             rng.shuffle(y)

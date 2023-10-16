@@ -4,7 +4,7 @@ from changeds.datastreams.gradual import *
 from changeds.datastreams.synthetic import Hypersphere, Gaussian
 
 if __name__ == '__main__':
-    stream = Gaussian()
+    stream = GradualRBF(num_concepts=5)
     print(stream.id())
     current_change = 0
     while stream.has_more_samples():

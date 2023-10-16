@@ -40,7 +40,7 @@ class Hypersphere(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSever
     def _create_hypersphere(self):
         data = self.rng.uniform(-1, 1, size=(self.num_concepts * self.n_per_concept, self.dims_drift))
         hypersphere = data / np.linalg.norm(data, axis=0)
-        hypersphere = (hypersphere - np.min(hypersphere)) / np.max(hypersphere)  # HS is in range 0,1
+        hypersphere = (hypersphere - np.min(hypersphere)) / (np.max(hypersphere) - np.min(hypersphere))   # HS is in range 0,1
         return hypersphere
 
     def _sample_severity(self):
@@ -53,8 +53,8 @@ class Hypersphere(RandomOrderChangeStream, RegionalChangeStream, QuantifiesSever
         uncorrelated = self.rng.normal(scale=0.25,
                                        size=(self.num_concepts * self.n_per_concept, self.dims_no_drift))
         data = np.concatenate([data, uncorrelated], axis=1)
-        assert np.max(data) <= 1
-        assert np.min(data) >= 0
+        data[data < 0] = 0
+        data[data > 1] = 1
         return data, radii
 
     def approximate_change_regions(self):

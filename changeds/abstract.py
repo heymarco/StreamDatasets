@@ -71,7 +71,8 @@ class ClassificationStream(ChangeStream, ABC):
 
 class RandomOrderChangeStream(ChangeStream, ABC):
     @staticmethod
-    def create_changes(X, y, num_concepts: int, n_per_concept: int, shuffle_within_concept: bool = False):
+    def create_changes(X, y, num_concepts: int, n_per_concept: int,
+                       rng: np.random.Generator, shuffle_within_concept: bool = False):
         sampled_indices = np.random.choice(range(len(y)), size=min(n_per_concept, len(y)), replace=False)
         X = X[sampled_indices]
         y = y[sampled_indices]
@@ -84,10 +85,14 @@ class RandomOrderChangeStream(ChangeStream, ABC):
         drift_points = []
         x_final = []
         y_final = []
+        selected_concept_labels = []
         for concept_index in range(num_concepts):
-            random_concept = np.random.choice(range(len(concepts)))
-            random_concept = concepts[random_concept]
-            np.random.shuffle(random_concept)
+            this_concept = rng.choice(range(len(concepts)))
+            if len(selected_concept_labels) > 0:
+                while selected_concept_labels[-1] == this_concept:
+                    this_concept = rng.choice(range(len(concepts)))
+            random_concept = concepts[this_concept]
+            rng.shuffle(random_concept)
             x_final.append(X[random_concept])
             y_final.append(y[random_concept])
             if concept_index == num_concepts - 1:
@@ -146,7 +151,7 @@ class GradualChangeStream(ChangeStream, ABC):
 
     @staticmethod
     def create_changes(X, y, num_concepts: int, drift_length: int, stretch: bool,
-                       rng, shuffle_within_concept: bool = False):
+                       rng: np.random.Generator, shuffle_within_concept: bool = False):
         """
         Creates gradual changes
         :param X: The data
@@ -165,10 +170,15 @@ class GradualChangeStream(ChangeStream, ABC):
             [rng.shuffle(concept) for concept in concepts]
         drift_points = []
         data_stream_indices = []
+        selected_concept_labels = []
         for concept_index in range(num_concepts):
             this_drift_length = (concept_index + 1) / num_concepts * drift_length if stretch else drift_length
-            random_concept = rng.choice(range(len(concepts)))
-            random_concept = concepts[random_concept]
+            this_concept = rng.choice(range(len(concepts)))
+            if len(selected_concept_labels) > 0:
+                while selected_concept_labels[-1] == this_concept:
+                    this_concept = rng.choice(range(len(concepts)))
+            selected_concept_labels.append(this_concept)
+            random_concept = concepts[this_concept]
             rng.shuffle(random_concept)
             if len(data_stream_indices) == 0:
                 data_stream_indices = random_concept.tolist()
